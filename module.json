@@ -1,0 +1,8 @@
+{
+    "Type": "nap::ModuleInfo", 
+    "mID": "nappjlink", 
+    "RequiredModules": [
+    	"napasio"
+    ], 
+    "WindowsDllSearchPaths": []
+}
