@@ -20,13 +20,12 @@ namespace nap
 {
 	bool PJLinkProjectorPool::init(utility::ErrorState& error)
 	{
-		// Asio can throw exceptions -> catch those
 		try
 		{
 			mContext = std::make_unique<TCPContext>();
 			return true;
 		}
-		catch (asio::system_error& e)
+		catch (std::exception& e)
 		{
 			error.fail(e.what());
 			return false;
@@ -37,17 +36,15 @@ namespace nap
 	bool PJLinkProjectorPool::connect(const PJLinkProjector& projector, nap::utility::ErrorState& error)
 	{
 		// Bail if connection is already made
+		assert(mContext != nullptr);
 		if(mConnections.find(&projector) != mConnections.end())
 			return true;
 
 		// Asio can throw exceptions -> catch those
 		try
 		{
-			// Create socket
-			assert(mContext != nullptr);
+			// Create socket and connect to projector
 			std::unique_ptr<TCPSocket> tcp_socket = std::make_unique<TCPSocket>(*mContext);
-
-			// Connect to endpoint (projector)
 			auto end_point = tcp::endpoint(address::from_string(projector.mIPAddress), pjlink::port);
 			tcp_socket->connect(end_point);
 
