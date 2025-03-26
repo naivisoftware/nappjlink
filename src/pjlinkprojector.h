@@ -10,8 +10,13 @@
 
 namespace nap
 {
+	namespace pjlink
+	{
+		constexpr const int port = 4352;		//< pjlink tcp communication port
+	}
+
 	// The projector pool
-	class PJLinkEndPoint;
+	class PJLinkProjectorPool;
 
 	/**
 	 * PJLink projector communication interface.
@@ -22,8 +27,19 @@ namespace nap
 	{
 		RTTI_ENABLE(Device)
 	public:
-		PJLinkProjector() = default;
+		/**
+		 * Connect the projector
+		 * @param errorState the error if connecting fails
+		 */
+		virtual bool start(utility::ErrorState& errorState) override;
+
+		/**
+		 * Disconnect the projector
+		 */
+		void stop() override;
+
 		std::string mIPAddress = "192.168.0.1";				//< Property: 'IP Address' ip address of the projector on the network
-		nap::ResourcePtr<PJLinkEndPoint> mEndPoint;			//< Property: 'End Point' Interface that manages the connection
+		nap::ResourcePtr<PJLinkProjectorPool> mPool;		//< Property: 'Pool' Interface that manages the connection
+
 	};
 }
