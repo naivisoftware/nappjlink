@@ -4,9 +4,6 @@
 
 #pragma once
 
-// Local includes
-#include "pjlinkprojector.h"
-
 // External includes
 #include <nap/device.h>
 #include <nap/resourceptr.h>
@@ -18,11 +15,13 @@
 
 namespace nap
 {
+	class PJLinkProjector;
+
 	/**
 	 * PJLink client pool.
 	 * Manages multiple projector connections thread-safe.
 	 */
-	class PJLinkProjectorPool : public Resource
+	class NAPAPI PJLinkProjectorPool : public Resource
 	{
 		RTTI_ENABLE(Resource)
     public:
@@ -34,20 +33,23 @@ namespace nap
 		 * @param error error if initialization fails
 		 * @return if initialization succeeded
 		 */
-		virtual bool init(utility::ErrorState& error) override;
+		bool init(utility::ErrorState& error) override;
 
 	private:
 		friend class PJLinkProjector;
 
 		// Attempt to connect
-		bool connect(PJLinkProjector& projector, nap::utility::ErrorState& error);
+		bool connect(const PJLinkProjector& projector, nap::utility::ErrorState& error);
 
 		// Attempt to disconnect
-		void disconnect(PJLinkProjector& projector);
+		void disconnect(const PJLinkProjector& projector);
+
+		// Send a message
+		void send(const PJLinkProjector& projector, const char* data, size_t size);
 
 		using TCPContext = asio::io_context;
 		using TCPSocket = asio::ip::tcp::socket;
 		std::unique_ptr<TCPContext> mContext;
-		std::unordered_map<PJLinkProjector*, std::unique_ptr<TCPSocket>> mConnections;
+		std::unordered_map<const PJLinkProjector*, std::unique_ptr<TCPSocket>> mConnections;
     };
 }

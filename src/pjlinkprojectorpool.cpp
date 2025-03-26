@@ -3,7 +3,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 // Local includes
- #include "pjlinkprojectorpool.h"
+#include "pjlinkprojectorpool.h"
+#include "pjlinkprojector.h"
+
+// External includes
+#include <asio/write.hpp>
+#include <asio/buffer.hpp>
+#include <nap/logger.h>
 
 RTTI_BEGIN_CLASS(nap::PJLinkProjectorPool)
 RTTI_END_CLASS
@@ -28,7 +34,7 @@ namespace nap
 	}
 
 
-	bool PJLinkProjectorPool::connect(PJLinkProjector& projector, nap::utility::ErrorState& error)
+	bool PJLinkProjectorPool::connect(const PJLinkProjector& projector, nap::utility::ErrorState& error)
 	{
 		// Bail if connection is already made
 		if(mConnections.find(&projector) != mConnections.end())
@@ -59,9 +65,19 @@ namespace nap
 	}
 
 
-	void PJLinkProjectorPool::disconnect(PJLinkProjector& projector)
+	void PJLinkProjectorPool::disconnect(const PJLinkProjector& projector)
 	{
 		assert(mConnections.find(&projector) != mConnections.end());
 		mConnections.erase(&projector);
+	}
+
+
+	void PJLinkProjectorPool::send(const PJLinkProjector& projector, const char* data, size_t size)
+	{
+		// Send msg
+		auto it = mConnections.find(&projector); assert(it != mConnections.end());
+		auto& tcp_socket = *it->second;
+		auto result = asio::write(tcp_socket, asio::buffer(data, size));
+		nap::Logger::info("Written %03d bytes", result);
 	}
 }
