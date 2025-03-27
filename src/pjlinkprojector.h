@@ -13,15 +13,32 @@
 
 namespace nap
 {
+	/**
+	 * PJLink protocol message specifications
+	 */
 	namespace pjlink
 	{
-		constexpr const int port = 4352;					//< default PJ Link port number
+		constexpr const int port				= 4352;			//< PJ Link communication port number
+		constexpr const char terminator			= '\r';			//< PJ link msg terminator
+
 		namespace cmd
 		{
-			constexpr const char* header = "%1";			//< PJ link cmd header
-			namespace set
-			{
-				constexpr const char* power = "POWR";		//< turn projector on(1) or off(0)
+			constexpr const size_t size			= 136;			//< PJ link max cmd size
+			constexpr const char header			= '%';			//< PJ link cmd header
+			constexpr const char version		= '1';			//< PJ link cmd version
+			constexpr const char seperator		= ' ';			//< PJ link seperator
+			constexpr const char query			= '?';			//< PJ link query parameter
+			namespace set {
+				constexpr const char* power		= "POWR";		//< turn projector on(1) or off(0)
+			}
+		}
+
+		namespace response
+		{
+			constexpr const char header			= '%';			// PJ link response header
+			namespace authenticate {
+				constexpr const char* header	= "PJLINK";		//< projector authentication response header
+				constexpr const char* disabled	= "PJLINK 0";	//< projector authentication disabled (required!)
 			}
 		}
 	}
@@ -53,6 +70,16 @@ namespace nap
 		bool connected() const								{ return mConnected; }
 
 		/**
+		 * Turns the projector on
+		 */
+		void powerOn();
+
+		/**
+		 * Turns the projector off
+		 */
+		void powerOff();
+
+		/**
 		 * Sends a control command to the projector a-sync.
 		 * @param cmd pjlink set command
 		 * @param value pjlink parameter
@@ -60,8 +87,8 @@ namespace nap
 		void set(const char* cmd, const char* value);
 
 		/**
-		 * Sends a query command to the projector a-sync.
-		 * @param cmd pjlink query command
+		 * Sends a get command to the projector a-sync.
+		 * @param cmd pjlink get command name
 		 */
 		void get(const char* cmd);
 

@@ -13,6 +13,7 @@
 #include <asio/streambuf.hpp>
 #include <asio/read_until.hpp>
 #include <iterator>
+#include <nap/assert.h>
 
 RTTI_BEGIN_CLASS(nap::PJLinkProjectorPool)
 RTTI_END_CLASS
@@ -80,6 +81,52 @@ namespace nap
 	}
 
 
+	void readResponse(PJLinkConnection& connection, std::string& ioResponse)
+	{
+		// Read from socket
+		assert(connection.getSocket().is_open());
+		char buffer[512];
+		auto size = connection.getSocket().read_some(asio::buffer(buffer, 512));
+		nap::Logger::info("%s: received %d bytes", connection.getProjector().mID.c_str(), size);
+
+		// Add to response
+		assert(size > 0);
+		ioResponse += std::string(buffer, size);
+
+		// Incomplete -> read more
+		if (ioResponse.back() != pjlink::terminator)
+			readResponse(connection, ioResponse);
+
+		// Could contain more than 1 response message, split based on msg terminator
+		auto parts = utility::splitString(ioResponse, pjlink::terminator);
+		assert(parts.size() <= 2);
+		ioResponse = parts.size() > 1 ? parts[1] : ioResponse;
+
+		// Valid response (not authentication)
+		if (utility::startsWith(ioResponse, &pjlink::response::header))
+			return;
+
+		// Handle authentication
+		if (utility::startsWith(ioResponse, pjlink::response::authenticate::header))
+		{
+			if (utility::startsWith(ioResponse, pjlink::response::authenticate::disabled))
+			{
+				ioResponse.clear();
+				readResponse(connection, ioResponse);
+				return;
+			}
+
+			// Authentication is not supported..
+			// TODO: Support PJLink authentication
+			nap::Logger::error("PJLink authentication request received, this is not supported!");
+			nap::Logger::error("Turn off authentication for projector: %s", connection.getProjector().mID.c_str());
+		}
+
+		// Unknown response!
+		NAP_ASSERT_MSG(false, utility::stringFormat("PJLink: unknown response: %s", ioResponse.c_str()).c_str());
+	}
+
+
 	void PJLinkProjectorPool::send(PJLinkProjector& projector, std::string&& msg)
 	{
 		utility::ErrorState error;
@@ -92,25 +139,14 @@ namespace nap
 		}
 
 		// Send msg
+		nap::Logger::info("%s: sending cmd: %s", projector.mID.c_str(), msg.c_str());
 		auto write_size = asio::write(connection->getSocket(), asio::buffer(msg.data(), msg.size()));
-		nap::Logger::info("Written %03d bytes", write_size);
+		nap::Logger::info("%s: written %d bytes", projector.mID.c_str(), write_size);
 
-		char read_buffer[1024];
-		auto read_size = connection->getSocket().read_some(asio::buffer(read_buffer, 1024));
-		auto read_msg = std::string(read_buffer, read_size-1);
-		auto msgs = utility::splitString(read_msg, '\r');
-		nap::Logger::info("Received %03d bytes", read_size);
-		for (const auto& msg : msgs)
-			nap::Logger::info("Message: %s", msg.c_str());
-
-		//str += "\0\n";
-
-		//auto read_size = asio::read_until(tcp_socket, stream, '\r');
-		//auto read_buff = std::string();
-		//read_buff.resize(some_size);
-		//stream.sgetn(read_buff.data(), some_size);
-		
-
-		// Check if there's more
+		// Get response
+		std::string response;
+		readResponse(*connection, response);
+		assert(!response.empty());
+		nap::Logger::info("%s: response: %s", projector.mID.c_str(), response.c_str());
 	}
 }

@@ -11,6 +11,22 @@ RTTI_END_CLASS
 
 namespace nap
 {
+	static std::string createCmd(const char* cmd, const char* value)
+	{
+		std::string r;
+		r.reserve(strlen(value) + 8);
+		r += pjlink::cmd::header;
+		r += pjlink::cmd::version;
+		r += cmd;
+		r += pjlink::cmd::seperator;
+		r += value;
+		r += pjlink::terminator;
+
+		assert(r.length() < pjlink::cmd::size);
+		return r;
+	}
+
+
 	bool PJLinkProjector::start(utility::ErrorState& errorState)
 	{
 		assert(!connected());
@@ -29,18 +45,26 @@ namespace nap
 	}
 
 
+	void PJLinkProjector::powerOn()
+	{
+		mPool->send(*this, createCmd(pjlink::cmd::set::power, "1"));
+	}
+
+
+	void PJLinkProjector::powerOff()
+	{
+		mPool->send(*this, createCmd(pjlink::cmd::set::power, "0"));
+	}
+
+
 	void PJLinkProjector::set(const char* cmd, const char* value)
 	{
-		if (connected())
-		{
-			auto cmd_str = utility::stringFormat("%s%s %s\r", pjlink::cmd::header, cmd, value);
-			mPool->send(*this, std::move(cmd_str));
-		}
+		mPool->send(*this, createCmd(cmd, value));
 	}
 
 
 	void PJLinkProjector::get(const char* cmd)
 	{
-
+		mPool->send(*this, createCmd(cmd, &pjlink::cmd::query));
 	}
 }
