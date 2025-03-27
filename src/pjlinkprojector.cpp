@@ -34,7 +34,7 @@ namespace nap
 		if (connected())
 		{
 			auto cmd_str = utility::stringFormat("%s%s %s\r", pjlink::cmd::header, cmd, value);
-			mPool->send(*this, cmd_str.c_str(), cmd_str.size());
+			mPool->send(*this, std::move(cmd_str));
 		}
 	}
 

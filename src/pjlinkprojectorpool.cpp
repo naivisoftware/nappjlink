@@ -80,7 +80,7 @@ namespace nap
 	}
 
 
-	void PJLinkProjectorPool::send(PJLinkProjector& projector, const char* data, size_t size)
+	void PJLinkProjectorPool::send(PJLinkProjector& projector, std::string&& msg)
 	{
 		utility::ErrorState error;
 		auto* connection = connect(projector, error);
@@ -92,13 +92,13 @@ namespace nap
 		}
 
 		// Send msg
-		auto write_size = asio::write(connection->getSocket(), asio::buffer(data, size));
+		auto write_size = asio::write(connection->getSocket(), asio::buffer(msg.data(), msg.size()));
 		nap::Logger::info("Written %03d bytes", write_size);
 
 		char read_buffer[1024];
 		auto read_size = connection->getSocket().read_some(asio::buffer(read_buffer, 1024));
-		auto msg = std::string(read_buffer, read_size-1);
-		auto msgs = utility::splitString(msg, '\r');
+		auto read_msg = std::string(read_buffer, read_size-1);
+		auto msgs = utility::splitString(read_msg, '\r');
 		nap::Logger::info("Received %03d bytes", read_size);
 		for (const auto& msg : msgs)
 			nap::Logger::info("Message: %s", msg.c_str());

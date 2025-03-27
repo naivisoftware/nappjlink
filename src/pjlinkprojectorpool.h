@@ -45,7 +45,7 @@ namespace nap
 		 * A connection remains available for 30 seconds after receiving a reply from the projector.
 		 * @param projector the projector to send the message 
 		 */
-		void send(PJLinkProjector& projector, const char* data, size_t size);
+		void send(PJLinkProjector& projector, std::string&& msg);
 
 	private:
 		friend class PJLinkProjector;
