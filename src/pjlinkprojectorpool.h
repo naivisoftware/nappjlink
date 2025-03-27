@@ -8,14 +8,18 @@
 #include <nap/device.h>
 #include <nap/resourceptr.h>
 #include <unordered_map>
+#include "pjlinkconnection.h"
 
 // External includes
 #include <asio/io_context.hpp>
-#include <asio/ip/tcp.hpp>
 
 namespace nap
 {
 	class PJLinkProjector;
+	namespace pjlink
+	{
+		using Context = asio::io_context;
+	}
 
 	/**
 	 * PJLink client pool.
@@ -35,21 +39,24 @@ namespace nap
 		 */
 		bool init(utility::ErrorState& error) override;
 
+		/**
+		 * Send a message to a projector.
+		 * Establishes a connection if no connection is available.
+		 * A connection remains available for 30 seconds after receiving a reply from the projector.
+		 * @param projector the projector to send the message 
+		 */
+		void send(PJLinkProjector& projector, const char* data, size_t size);
+
 	private:
 		friend class PJLinkProjector;
 
 		// Attempt to connect
-		bool connect(const PJLinkProjector& projector, nap::utility::ErrorState& error);
+		PJLinkConnection* connect(PJLinkProjector& projector, nap::utility::ErrorState& error);
 
 		// Attempt to disconnect
-		void disconnect(const PJLinkProjector& projector);
+		void disconnect(PJLinkProjector& projector);
 
-		// Send a message
-		void send(const PJLinkProjector& projector, const char* data, size_t size);
-
-		using TCPContext = asio::io_context;
-		using TCPSocket = asio::ip::tcp::socket;
-		std::unique_ptr<TCPContext> mContext;
-		std::unordered_map<const PJLinkProjector*, std::unique_ptr<TCPSocket>> mConnections;
+		std::unique_ptr<pjlink::Context> mContext = nullptr;
+		std::unordered_map<PJLinkProjector*, PJLinkConnection> mConnections;
     };
 }
