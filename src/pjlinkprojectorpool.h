@@ -4,19 +4,20 @@
 
 #pragma once
 
+// Local includes
+#include "pjlinkconnection.h"
+
 // External includes
 #include <nap/device.h>
 #include <nap/resourceptr.h>
 #include <unordered_map>
-#include "pjlinkconnection.h"
-
-// External includes
 #include <asio/io_context.hpp>
 
 namespace nap
 {
 	class PJLinkProjector;
 	class PJLinkCommand;
+
 	namespace pjlink
 	{
 		using Context = asio::io_context;
@@ -58,7 +59,7 @@ namespace nap
 		// Attempt to disconnect
 		void disconnect(PJLinkProjector& projector);
 
-		std::unique_ptr<pjlink::Context> mContext = nullptr;
+		pjlink::Context mContext;
 		std::unordered_map<PJLinkProjector*, PJLinkConnection> mConnections;
     };
 }

@@ -11,10 +11,7 @@
 #include <asio/write.hpp>
 #include <asio/buffer.hpp>
 #include <nap/logger.h>
-#include <asio/streambuf.hpp>
-#include <asio/read_until.hpp>
 #include <iterator>
-#include <nap/assert.h>
 
 RTTI_BEGIN_CLASS(nap::PJLinkProjectorPool)
 RTTI_END_CLASS
@@ -23,18 +20,27 @@ using namespace asio::ip;
 
 namespace nap
 {
+	void readResponse(PJLinkConnection& connection, std::string& ioResponse)
+	{
+		// Read from socket
+		assert(connection.getSocket().is_open());
+		char buffer[512];
+		auto size = connection.getSocket().read_some(asio::buffer(buffer, 512));
+		nap::Logger::info("%s: received %d bytes", connection.getProjector().mID.c_str(), size);
+
+		// Add to response
+		assert(size > 0);
+		ioResponse += std::string(buffer, size);
+
+		// Incomplete -> read more
+		if (ioResponse.back() != pjlink::terminator)
+			readResponse(connection, ioResponse);
+	}
+
+
 	bool PJLinkProjectorPool::init(utility::ErrorState& error)
 	{
-		try
-		{
-			mContext = std::make_unique<pjlink::Context>();
-			return true;
-		}
-		catch (std::exception& e)
-		{
-			error.fail(e.what());
-			return false;
-		}
+		return true;
 	}
 
 
@@ -56,13 +62,28 @@ namespace nap
 		try
 		{
 			// Create socket and connect to projector
-			assert(mContext != nullptr);
-			pjlink::Socket proj_socket(*mContext);
+			pjlink::Socket proj_socket(mContext);
 			auto end_point = tcp::endpoint(address::from_string(projector.mIPAddress), pjlink::port);
 			proj_socket.connect(end_point);
 
+			// Read authentication response
+			PJLinkConnection connection(std::move(proj_socket), projector);
+			std::string auth_response;
+			readResponse(connection, auth_response);
+			nap::Logger::info("%s: response: %s", projector.mID.c_str(), auth_response.c_str());
+
+			// Ensure it's an authentication response
+			if (!error.check(utility::startsWith(auth_response, pjlink::response::authenticate::header),
+				"Invalid authentication response '%s' from projector '%s'", auth_response.c_str(), projector.mID.c_str()))
+				return nullptr;
+
+			// Make sure authentication is disabled
+			if (!error.check(utility::startsWith(auth_response, pjlink::response::authenticate::disabled),
+				"PJLink authentication procedure not supported, turn off authentication for '%s'", projector.mID.c_str()))
+				return nullptr;
+
 			// Add as valid connection on success
-			auto it = mConnections.emplace(&projector, PJLinkConnection(std::move(proj_socket), projector));
+			auto it = mConnections.emplace(&projector, std::move(connection));
 			assert(it.second);
 			return &it.first->second;
 		}
@@ -79,52 +100,6 @@ namespace nap
 		// Delete connection -> shuts down active transfers
 		assert(mConnections.find(&projector) != mConnections.end());
 		mConnections.erase(&projector);
-	}
-
-
-	void readResponse(PJLinkConnection& connection, std::string& ioResponse)
-	{
-		// Read from socket
-		assert(connection.getSocket().is_open());
-		char buffer[512];
-		auto size = connection.getSocket().read_some(asio::buffer(buffer, 512));
-		nap::Logger::info("%s: received %d bytes", connection.getProjector().mID.c_str(), size);
-
-		// Add to response
-		assert(size > 0);
-		ioResponse += std::string(buffer, size);
-
-		// Incomplete -> read more
-		if (ioResponse.back() != pjlink::terminator)
-			readResponse(connection, ioResponse);
-
-		// Could contain mor e than 1 response message, split based on msg terminator
-		auto parts = utility::splitString(ioResponse, pjlink::terminator);
-		assert(parts.size() <= 2);
-		ioResponse = parts.size() > 1 ? parts[1] : ioResponse;
-
-		// Valid response (not authentication)
-		if (utility::startsWith(ioResponse, &pjlink::response::header))
-			return;
-
-		// Handle authentication
-		if (utility::startsWith(ioResponse, pjlink::response::authenticate::header))
-		{
-			if (utility::startsWith(ioResponse, pjlink::response::authenticate::disabled))
-			{
-				ioResponse.clear();
-				readResponse(connection, ioResponse);
-				return;
-			}
-
-			// Authentication is not supported..
-			// TODO: Support PJLink authentication
-			nap::Logger::error("PJLink authentication request received, this is not supported!");
-			nap::Logger::error("Turn off authentication for projector: %s", connection.getProjector().mID.c_str());
-		}
-
-		// Unknown response!
-		NAP_ASSERT_MSG(false, utility::stringFormat("PJLink: unknown response: %s", ioResponse.c_str()).c_str());
 	}
 
 
@@ -150,5 +125,4 @@ namespace nap
 		assert(!response.empty());
 		nap::Logger::info("%s: response: %s", projector.mID.c_str(), response.c_str());
 	}
-
 }

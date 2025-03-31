@@ -37,7 +37,7 @@ namespace nap
 		/**
 		 * Closes connection to projector on destruction
 		 */
-		~PJLinkConnection() { mSocket.close(); }
+		~PJLinkConnection();
 
 		// Disable copy
 		PJLinkConnection& operator=(const PJLinkConnection&) = delete;

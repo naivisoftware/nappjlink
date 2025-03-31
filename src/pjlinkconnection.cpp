@@ -23,4 +23,14 @@ namespace nap
 		other.mProjector = nullptr;
 		mTimer.reset();
 	}
+
+
+	PJLinkConnection::~PJLinkConnection()
+	{
+		if (mSocket.is_open())
+		{
+			mSocket.cancel();
+			mSocket.close();
+		}
+	}
 }
