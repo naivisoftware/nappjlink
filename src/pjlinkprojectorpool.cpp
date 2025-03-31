@@ -5,6 +5,7 @@
 // Local includes
 #include "pjlinkprojectorpool.h"
 #include "pjlinkprojector.h"
+#include "pjlinkcommand.h"
 
 // External includes
 #include <asio/write.hpp>
@@ -97,7 +98,7 @@ namespace nap
 		if (ioResponse.back() != pjlink::terminator)
 			readResponse(connection, ioResponse);
 
-		// Could contain more than 1 response message, split based on msg terminator
+		// Could contain mor e than 1 response message, split based on msg terminator
 		auto parts = utility::splitString(ioResponse, pjlink::terminator);
 		assert(parts.size() <= 2);
 		ioResponse = parts.size() > 1 ? parts[1] : ioResponse;
@@ -127,7 +128,7 @@ namespace nap
 	}
 
 
-	void PJLinkProjectorPool::send(PJLinkProjector& projector, std::string&& msg)
+	void PJLinkProjectorPool::send(PJLinkProjector& projector, PJLinkCommand&& cmd)
 	{
 		utility::ErrorState error;
 		auto* connection = connect(projector, error);
@@ -139,8 +140,8 @@ namespace nap
 		}
 
 		// Send msg
-		nap::Logger::info("%s: sending cmd: %s", projector.mID.c_str(), msg.c_str());
-		auto write_size = asio::write(connection->getSocket(), asio::buffer(msg.data(), msg.size()));
+		nap::Logger::info("%s: sending cmd: %s", projector.mID.c_str(), cmd.data());
+		auto write_size = asio::write(connection->getSocket(), asio::buffer(cmd.data(), cmd.size()));
 		nap::Logger::info("%s: written %d bytes", projector.mID.c_str(), write_size);
 
 		// Get response
@@ -149,4 +150,5 @@ namespace nap
 		assert(!response.empty());
 		nap::Logger::info("%s: response: %s", projector.mID.c_str(), response.c_str());
 	}
+
 }

@@ -16,6 +16,7 @@
 namespace nap
 {
 	class PJLinkProjector;
+	class PJLinkCommand;
 	namespace pjlink
 	{
 		using Context = asio::io_context;
@@ -43,9 +44,10 @@ namespace nap
 		 * Send a message to a projector.
 		 * Establishes a connection if no connection is available.
 		 * A connection remains available for 30 seconds after receiving a reply from the projector.
-		 * @param projector the projector to send the message 
+		 * @param projector the projector to send the message
+		 * @param cmd the pjlink command to send
 		 */
-		void send(PJLinkProjector& projector, std::string&& msg);
+		void send(PJLinkProjector& projector, PJLinkCommand&& cmd);
 
 	private:
 		friend class PJLinkProjector;

@@ -11,22 +11,6 @@ RTTI_END_CLASS
 
 namespace nap
 {
-	static std::string createCmd(const char* cmd, const char* value)
-	{
-		std::string r;
-		r.reserve(strlen(value) + 8);
-		r += pjlink::cmd::header;
-		r += pjlink::cmd::version;
-		r += cmd;
-		r += pjlink::cmd::seperator;
-		r += value;
-		r += pjlink::terminator;
-
-		assert(r.length() < pjlink::cmd::size);
-		return r;
-	}
-
-
 	bool PJLinkProjector::start(utility::ErrorState& errorState)
 	{
 		assert(!connected());
@@ -47,24 +31,24 @@ namespace nap
 
 	void PJLinkProjector::powerOn()
 	{
-		mPool->send(*this, createCmd(pjlink::cmd::set::power, "1"));
+		mPool->send(*this, PJLinkCommand(pjlink::cmd::set::power, "1"));
 	}
 
 
 	void PJLinkProjector::powerOff()
 	{
-		mPool->send(*this, createCmd(pjlink::cmd::set::power, "0"));
+		mPool->send(*this, PJLinkCommand(pjlink::cmd::set::power, "0"));
 	}
 
 
-	void PJLinkProjector::set(const char* cmd, const char* value)
+	void PJLinkProjector::set(const std::string& cmd, const std::string& value)
 	{
-		mPool->send(*this, createCmd(cmd, value));
+		mPool->send(*this, PJLinkCommand(cmd, value));
 	}
 
 
-	void PJLinkProjector::get(const char* cmd)
+	void PJLinkProjector::get(const std::string& cmd)
 	{
-		mPool->send(*this, createCmd(cmd, &pjlink::cmd::query));
+		mPool->send(*this, PJLinkCommand(cmd, &pjlink::cmd::query));
 	}
 }
