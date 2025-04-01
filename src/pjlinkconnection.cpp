@@ -150,11 +150,11 @@ namespace nap
 
 	void PJLinkConnection::read(pjlink::EndPoint ep, PJLinkCommand&& source_cmd)
 	{
-		asio::async_read_until(mSocket, mRespBuffer, pjlink::terminator, [this, ep, source = source_cmd](std::error_code ec, std::size_t size)
+		asio::async_read_until(mSocket, mRespBuffer, pjlink::terminator, [this, ep, src = std::move(source_cmd)] (std::error_code ec, std::size_t size)
 			{
 				if (ec)
 				{
-					nap::Logger::error("Reading failed (ec '%d'), projector endpoint: %s",
+					nap::Logger::error("Reading failed (ec '%d'), projector endpoint : %s",
 						ec.value(), ep.address().to_string().c_str());
 
 					// TODO: Close
@@ -165,15 +165,15 @@ namespace nap
 				nap::Logger::info("%s: Read %d byte(s)", ep.address().to_string().c_str(), size);
 
 				// Commit response from buffer input to response 
-				PJLinkCommand response(source);
+				PJLinkCommand reply(src);
 				std::istream is(&mRespBuffer);
-				std::getline(std::istream(&mRespBuffer), response.mResponse, pjlink::terminator);
+				std::getline(std::istream(&mRespBuffer), reply.mResponse, pjlink::terminator);
 
 				// All good
-				nap::Logger::info("%s: Response '%s', cmd: '%s'",
+				nap::Logger::info("%s: Reply '%s', cmd: '%s'",
 					mEndpoint.address().to_string().c_str(),
-					response.mResponse.substr(0, response.mResponse.size()-1).c_str(),
-					response.mCommand.substr(0, response.mCommand.size()-1).c_str());
+					reply.mResponse.substr(0, reply.mResponse.size()-1).c_str(),
+					reply.mCommand.substr(0, reply.mCommand.size()-1).c_str());
 			});
 	}
 
