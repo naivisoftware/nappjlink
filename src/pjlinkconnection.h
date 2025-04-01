@@ -4,6 +4,9 @@
 
 #pragma once
 
+// Local includes
+#include "pjlinkprojectorpool.h"
+
 // External includes
 #include <asio/ip/tcp.hpp>
 #include <utility/dllexport.h>
@@ -28,11 +31,10 @@ namespace nap
 
 		/**
 		 * Constructor 
-		 * @param socket communication socket
+		 * @param context network runtime context
 		 * @param projector end point
 		 */
-		PJLinkConnection(pjlink::Socket&& socket, PJLinkProjector& projector) :
-			mSocket(std::move(socket)), mProjector(&projector) { mTimer.reset(); }
+		PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector);
 
 		/**
 		 * Closes connection to projector on destruction
@@ -81,6 +83,8 @@ namespace nap
 		pjlink::Socket		mSocket;					//< Communication socket
 		PJLinkProjector*	mProjector = nullptr;		//< Projector end-point
 		SteadyTimer			mTimer;						//< Connection timer
+
+		void connect();
 	};
 }
 

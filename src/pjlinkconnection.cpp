@@ -3,15 +3,32 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "pjlinkconnection.h"
+#include "pjlinkprojector.h"
+
+using namespace asio::ip;
 
 namespace nap
 {
+	PJLinkConnection::PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector) :
+		mSocket(context), mProjector(&projector)
+	{
+		connect();
+	}
+
+
+	void PJLinkConnection::connect()
+	{
+		assert(mProjector != nullptr);
+		auto end_point = tcp::endpoint(address::from_string(mProjector->mIPAddress), pjlink::port);
+		mSocket.connect(end_point);
+	}
+
+
 	nap::PJLinkConnection& PJLinkConnection::operator=(PJLinkConnection&& other) noexcept
 	{
 		mSocket = std::move(other.mSocket);
 		mProjector = other.mProjector;
 		other.mProjector = nullptr;
-		mTimer.reset();
 		return *this;
 	}
 
@@ -21,7 +38,6 @@ namespace nap
 		mProjector(other.mProjector)
 	{
 		other.mProjector = nullptr;
-		mTimer.reset();
 	}
 
 

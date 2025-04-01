@@ -4,27 +4,24 @@
 
 #pragma once
 
-// Local includes
-#include "pjlinkconnection.h"
-
 // External includes
 #include <nap/device.h>
 #include <nap/resourceptr.h>
 #include <unordered_map>
 #include <asio/io_context.hpp>
+#include <asio/executor_work_guard.hpp>
 
 namespace nap
 {
 	class PJLinkProjector;
-	class PJLinkCommand;
-
 	namespace pjlink
 	{
 		using Context = asio::io_context;
+		using Guard = asio::executor_work_guard<Context::executor_type>;
 	}
 
 	/**
-	 * PJLink client pool.
+	 * PJLink shared client context.
 	 * Manages multiple projector connections thread-safe.
 	 */
 	class NAPAPI PJLinkProjectorPool : public Resource
@@ -42,24 +39,17 @@ namespace nap
 		bool init(utility::ErrorState& error) override;
 
 		/**
-		 * Send a message to a projector.
-		 * Establishes a connection if no connection is available.
-		 * A connection remains available for 30 seconds after receiving a reply from the projector.
-		 * @param projector the projector to send the message
-		 * @param cmd the pjlink command to send
+		 * Finish outstanding work and quit
 		 */
-		void send(PJLinkProjector& projector, PJLinkCommand&& cmd);
+		void onDestroy() override;
 
 	private:
 		friend class PJLinkProjector;
 
-		// Attempt to connect
-		PJLinkConnection* connect(PJLinkProjector& projector, nap::utility::ErrorState& error);
-
 		// Attempt to disconnect
-		void disconnect(PJLinkProjector& projector);
-
-		pjlink::Context mContext;
-		std::unordered_map<PJLinkProjector*, PJLinkConnection> mConnections;
+		pjlink::Context mContext;							//< Asio runtime context
+		std::unique_ptr<pjlink::Guard> mGuard = nullptr;	//< Asio work guard
+		std::unique_ptr<std::thread> mThread  = nullptr;	//< Asio runtime thread
+		
     };
 }

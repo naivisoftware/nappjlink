@@ -13,42 +13,37 @@ namespace nap
 {
 	bool PJLinkProjector::start(utility::ErrorState& errorState)
 	{
-		return mPool->connect(*this, errorState);
+		mClient = std::make_unique<PJLinkConnection>(mPool->mContext, *this);
+		return true;
 	}
 
 
 	void PJLinkProjector::stop()
 	{
-		mPool->disconnect(*this);
 	}
 
 
 	void PJLinkProjector::powerOn()
 	{
-		mPool->send(*this, PJLinkCommand(pjlink::cmd::set::power, "1"));
 	}
 
 
 	void PJLinkProjector::powerOff()
 	{
-		mPool->send(*this, PJLinkCommand(pjlink::cmd::set::power, "0"));
 	}
 
 
 	void PJLinkProjector::mute(bool value)
 	{
-		mPool->send(*this, PJLinkCommand(pjlink::cmd::set::avmute, value ? "31" : "30"));
 	}
 
 
 	void PJLinkProjector::set(const std::string& cmd, const std::string& value)
 	{
-		mPool->send(*this, PJLinkCommand(cmd, value));
 	}
 
 
 	void PJLinkProjector::get(const std::string& cmd)
 	{
-		mPool->send(*this, PJLinkCommand(cmd, &pjlink::cmd::query));
 	}
 }

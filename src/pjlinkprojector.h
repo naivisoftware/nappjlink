@@ -6,6 +6,7 @@
 
 // Local includes
 #include "pjlinkprojectorpool.h"
+#include "pjlinkconnection.h"
 #include "pjlinkcommand.h"
 
 // External includes
@@ -17,7 +18,6 @@ namespace nap
 	/**
 	 * PJLink projector communication interface.
 	 * Acts as a client to control and operate a pjlink enabled projector on the network.
-	 * This object purely acts as an interface and does not manage its own connection.
 	 */
 	class NAPAPI PJLinkProjector : public Device
 	{
@@ -63,7 +63,10 @@ namespace nap
 		 */
 		void get(const std::string& cmd);
 
-		std::string mIPAddress = "192.168.0.1";				//< Property: 'IP Address' ip address of the projector on the network
-		nap::ResourcePtr<PJLinkProjectorPool> mPool;		//< Property: 'Pool' Interface that manages the connection						
+		std::string mIPAddress = "192.168.0.1";					//< Property: 'IP Address' ip address of the projector on the network
+		nap::ResourcePtr<PJLinkProjectorPool> mPool;			//< Property: 'Pool' Interface that manages the connection
+
+	private:
+		std::unique_ptr<PJLinkConnection> mClient = nullptr;	//< Client connection
 	};
 }
