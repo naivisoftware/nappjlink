@@ -85,7 +85,7 @@ namespace nap
 		void authenticate(pjlink::EndPoint ep);
 		void send(PJLinkCommand&& cmd);
 		void write(pjlink::EndPoint ep);
-		void read(pjlink::EndPoint ep);
+		void read(pjlink::EndPoint ep, PJLinkCommand&& cmd);
 
 		// A-sync objects -> accessed from socket execution context
 		pjlink::StreamBuf mAuthBuffer;						//< Authentification buffer

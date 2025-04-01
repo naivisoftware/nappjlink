@@ -134,12 +134,10 @@ namespace nap
 					return;
 				}
 
-				// Writing succeeded
+				// Writing succeeded -> schedule a response read before attempting a new write
 				nap::Logger::info("%s: Written %d byte(s)", ep.address().to_string().c_str(), size);
-				mCmds.pop();
-
-				// Schedule a response read before attempting a new write
-				read(ep);
+				auto current = mCmds.front(); mCmds.pop();
+				read(ep, std::move(current));
 
 				// Continue if there are more commands
 				if (!mCmds.empty())
@@ -150,9 +148,9 @@ namespace nap
 	}
 
 
-	void PJLinkConnection::read(pjlink::EndPoint ep)
+	void PJLinkConnection::read(pjlink::EndPoint ep, PJLinkCommand&& source_cmd)
 	{
-		asio::async_read_until(mSocket, mRespBuffer, pjlink::terminator, [this, ep](std::error_code ec, std::size_t size)
+		asio::async_read_until(mSocket, mRespBuffer, pjlink::terminator, [this, ep, source = source_cmd](std::error_code ec, std::size_t size)
 			{
 				if (ec)
 				{
@@ -163,14 +161,19 @@ namespace nap
 					return;
 				}
 
-				// Commit response from buffer input to string
-				nap::Logger::info("%s: Received %d response bytes", ep.address().to_string().c_str(), size);
-				std::istream is(&mRespBuffer); std::string response;
-				std::getline(std::istream(&mRespBuffer), response, pjlink::terminator);
+				// Read succeeded
+				nap::Logger::info("%s: Read %d byte(s)", ep.address().to_string().c_str(), size);
+
+				// Commit response from buffer input to response 
+				PJLinkCommand response(source);
+				std::istream is(&mRespBuffer);
+				std::getline(std::istream(&mRespBuffer), response.mResponse, pjlink::terminator);
 
 				// All good
-				nap::Logger::info("%s: Received response '%s'",
-					mEndpoint.address().to_string().c_str(), response.c_str());
+				nap::Logger::info("%s: Response '%s', cmd: '%s'",
+					mEndpoint.address().to_string().c_str(),
+					response.mResponse.substr(0, response.mResponse.size()-1).c_str(),
+					response.mCommand.substr(0, response.mCommand.size()-1).c_str());
 			});
 	}
 
