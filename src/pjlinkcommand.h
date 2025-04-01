@@ -77,7 +77,6 @@ namespace nap
 		 */
 		const std::string& getResponse()		{ return mResponse; }
 
-	private:
 		std::string mCommand;					//< Full PJLink command message
 		std::string mResponse;					//< Full PJLink command response
 	};

@@ -37,18 +37,18 @@ namespace nap
 		/**
 		 * Turns the projector on
 		 */
-		void powerOn();
+		void powerOn()													{ set(pjlink::cmd::set::power, "1"); }
 
 		/**
 		 * Turns the projector off
 		 */
-		void powerOff();
+		void powerOff()													{ set(pjlink::cmd::set::power, "0"); }
 
 		/**
 		 * Mute both projector audio and video output.
 		 * @param value if audio and video output should be muted
 		 */
-		void mute(bool value);
+		void mute(bool value)											{ set(pjlink::cmd::set::avmute, value ? "31" : "30"); }
 
 		/**
 		 * Sends a control command to the projector a-sync.

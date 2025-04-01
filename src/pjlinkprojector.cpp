@@ -20,26 +20,15 @@ namespace nap
 
 	void PJLinkProjector::stop()
 	{
-	}
-
-
-	void PJLinkProjector::powerOn()
-	{
-	}
-
-
-	void PJLinkProjector::powerOff()
-	{
-	}
-
-
-	void PJLinkProjector::mute(bool value)
-	{
+		mClient.reset(nullptr);
+		mClient = nullptr;
 	}
 
 
 	void PJLinkProjector::set(const std::string& cmd, const std::string& value)
 	{
+		assert(mClient != nullptr);
+		mClient->send(PJLinkCommand(cmd, value));
 	}
 
 

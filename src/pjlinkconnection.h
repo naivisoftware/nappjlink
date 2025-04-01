@@ -6,12 +6,14 @@
 
 // Local includes
 #include "pjlinkprojectorpool.h"
+#include "pjlinkcommand.h"
 
 // External includes
 #include <asio/ip/tcp.hpp>
 #include <asio/streambuf.hpp>
 #include <utility/dllexport.h>
 #include <nap/timer.h>
+#include <queue>
 
 namespace nap
 {
@@ -23,7 +25,7 @@ namespace nap
 	}
 
 	/**
-	 * TCP projector connection, established and managed by the projector pool.
+	 * PJLink client connection.
 	 */
 	class NAPAPI PJLinkConnection final
 	{
@@ -57,16 +59,6 @@ namespace nap
 		const PJLinkProjector& getProjector() const		{ assert(mProjector != nullptr); return *mProjector; }
 
 		/**
-		 * @return communication socket
-		 */
-		pjlink::Socket& getSocket()						{ return mSocket; }
-
-		/**
-		 * @return communication socket
-		 */
-		const pjlink::Socket& getSocket() const			{ return mSocket; }
-
-		/**
 		 * Compare if they manage the same projector instance
 		 */
 		bool operator == (const PJLinkProjector& c)		{ return &c == mProjector; }
@@ -82,6 +74,8 @@ namespace nap
 		double session() const							{ return mTimer.getElapsedTime(); }
 
 	private:
+		friend class PJLinkProjector;
+
 		pjlink::Socket		mSocket;					//< Communication socket
 		pjlink::EndPoint	mEndpoint;					//< Endpoint description
 		PJLinkProjector*	mProjector = nullptr;		//< Projector end-point
@@ -89,9 +83,14 @@ namespace nap
 
 		void connect();
 		void authenticate(pjlink::EndPoint ep);
+		void send(PJLinkCommand&& cmd);
+		void write(pjlink::EndPoint ep);
+		void read(pjlink::EndPoint ep);
 
-		
-		pjlink::StreamBuf mAuthBuffer;
+		// A-sync objects -> accessed from socket execution context
+		pjlink::StreamBuf mAuthBuffer;						//< Authentification buffer
+		pjlink::StreamBuf  mRespBuffer;						//< Response buffer
+		std::queue<PJLinkCommand> mCmds;					//< Commands to send
 	};
 }
 

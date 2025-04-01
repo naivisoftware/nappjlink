@@ -12,6 +12,7 @@
 #include <asio/read.hpp>
 #include <nap/logger.h>
 #include <asio/read_until.hpp>
+#include <asio/write.hpp>
 #include <string.h>
 
 using namespace asio::ip;
@@ -36,6 +37,7 @@ namespace nap
 						ec.value(), id.c_str(), ep.address().to_string().c_str(), ep.port());
 
 					// TODO: CLOSE
+					return;
 				}
 
 				// Connection success -> verify authentification
@@ -45,6 +47,7 @@ namespace nap
 				// Authenticate
 				authenticate(ep);
 			});
+		mTimer.reset();
 	}
 
 
@@ -58,6 +61,7 @@ namespace nap
 						ec.value(), ep.address().to_string().c_str());
 
 					// TODO: CLOSE
+					return;
 				}
 
 				// Commit to string
@@ -72,6 +76,7 @@ namespace nap
 						ep.address().to_string().c_str(), response.c_str());
 
 					// TODO: Close
+					return;
 				}
 
 				// Ensure authentication is diabled
@@ -82,11 +87,90 @@ namespace nap
 						ep.address().to_string().c_str());
 
 					// TODO: Close
+					return;
 				}
 
 				// All good
-				nap::Logger::info("%s: Authentication succeeded",
+				nap::Logger::info("%s: Authentication succeeded", 
 					mEndpoint.address().to_string().c_str());
+			});
+	}
+
+
+	void PJLinkConnection::send(PJLinkCommand&& command)
+	{
+		// Submit task for execution -> it is queued and called from the socket execution thread
+		asio::post(mSocket.get_executor(), [this, ep = mEndpoint, cmd = std::move(command)]
+			{
+				bool writing = !mCmds.empty();
+				mCmds.emplace(std::move(cmd));
+				if (!writing)
+				{
+					write(ep);
+				}
+			}
+		);
+	}
+
+
+	void PJLinkConnection::write(pjlink::EndPoint ep)
+	{
+		assert(!mCmds.empty()); 
+		auto& cmd_ref = mCmds.front();
+		auto write_buffer = asio::buffer(cmd_ref.data(), cmd_ref.size());
+
+		nap::Logger::info("%s: Writing '%s'", ep.address().to_string().c_str(),
+			cmd_ref.getCommand().substr(0, cmd_ref.size() - 1).c_str());
+
+		asio::async_write(mSocket, write_buffer, [this, ep](std::error_code ec, std::size_t size)
+			{
+				// Writing failed
+				if (ec)
+				{
+					nap::Logger::error("Writing failed (ec '%d'), projector endpoint: %s",
+						ec.value(), ep.address().to_string().c_str());
+
+					// TODO: Close
+					return;
+				}
+
+				// Writing succeeded
+				nap::Logger::info("%s: Written %d byte(s)", ep.address().to_string().c_str(), size);
+				mCmds.pop();
+
+				// Schedule a response read before attempting a new write
+				read(ep);
+
+				// Continue if there are more commands
+				if (!mCmds.empty())
+				{
+					write(ep);
+				}
+			});
+	}
+
+
+	void PJLinkConnection::read(pjlink::EndPoint ep)
+	{
+		asio::async_read_until(mSocket, mRespBuffer, pjlink::terminator, [this, ep](std::error_code ec, std::size_t size)
+			{
+				if (ec)
+				{
+					nap::Logger::error("Reading failed (ec '%d'), projector endpoint: %s",
+						ec.value(), ep.address().to_string().c_str());
+
+					// TODO: Close
+					return;
+				}
+
+				// Commit response from buffer input to string
+				nap::Logger::info("%s: Received %d response bytes", ep.address().to_string().c_str(), size);
+				std::istream is(&mRespBuffer); std::string response;
+				std::getline(std::istream(&mRespBuffer), response, pjlink::terminator);
+
+				// All good
+				nap::Logger::info("%s: Received response '%s'",
+					mEndpoint.address().to_string().c_str(), response.c_str());
 			});
 	}
 
