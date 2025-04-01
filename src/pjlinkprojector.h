@@ -50,6 +50,12 @@ namespace nap
 		void powerOff();
 
 		/**
+		 * Mute both projector audio and video output.
+		 * @param value if audio and video output should be muted
+		 */
+		void mute(bool value);
+
+		/**
 		 * Sends a control command to the projector a-sync.
 		 * @param cmd pjlink set command
 		 * @param value pjlink parameter

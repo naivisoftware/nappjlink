@@ -41,6 +41,12 @@ namespace nap
 	}
 
 
+	void PJLinkProjector::mute(bool value)
+	{
+		mPool->send(*this, PJLinkCommand(pjlink::cmd::set::avmute, value ? "31" : "30"));
+	}
+
+
 	void PJLinkProjector::set(const std::string& cmd, const std::string& value)
 	{
 		mPool->send(*this, PJLinkCommand(cmd, value));

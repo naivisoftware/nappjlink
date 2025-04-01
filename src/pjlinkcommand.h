@@ -28,6 +28,7 @@ namespace nap
 			constexpr const char query			= '?';			//< PJ link query parameter
 			namespace set {
 				constexpr const char* power		= "POWR";		//< turn projector on(1) or off(0)
+				constexpr const char* avmute	= "AVMT";		//< turns video(10, on11), audio(20,21) or both(30,31) on or off
 			}
 		}
 
