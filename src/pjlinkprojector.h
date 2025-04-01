@@ -35,11 +35,6 @@ namespace nap
 		void stop() override;
 
 		/**
-		 * @return if there is an active projector connection
-		 */
-		bool connected() const								{ return mConnected; }
-
-		/**
 		 * Turns the projector on
 		 */
 		void powerOn();
@@ -69,9 +64,6 @@ namespace nap
 		void get(const std::string& cmd);
 
 		std::string mIPAddress = "192.168.0.1";				//< Property: 'IP Address' ip address of the projector on the network
-		nap::ResourcePtr<PJLinkProjectorPool> mPool;		//< Property: 'Pool' Interface that manages the connection
-
-	private:
-		bool mConnected = false;							
+		nap::ResourcePtr<PJLinkProjectorPool> mPool;		//< Property: 'Pool' Interface that manages the connection						
 	};
 }

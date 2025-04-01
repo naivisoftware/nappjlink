@@ -98,7 +98,6 @@ namespace nap
 	void PJLinkProjectorPool::disconnect(PJLinkProjector& projector)
 	{
 		// Delete connection -> shuts down active transfers
-		assert(mConnections.find(&projector) != mConnections.end());
 		mConnections.erase(&projector);
 	}
 

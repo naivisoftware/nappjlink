@@ -13,19 +13,13 @@ namespace nap
 {
 	bool PJLinkProjector::start(utility::ErrorState& errorState)
 	{
-		assert(!connected());
-		if (!mPool->connect(*this, errorState))
-			return false;
-
-		mConnected = true;
-		return true;
+		return mPool->connect(*this, errorState);
 	}
 
 
 	void PJLinkProjector::stop()
 	{
-		if(connected())
-			mPool->disconnect(*this);
+		mPool->disconnect(*this);
 	}
 
 
