@@ -9,6 +9,7 @@
 
 // External includes
 #include <asio/ip/tcp.hpp>
+#include <asio/streambuf.hpp>
 #include <utility/dllexport.h>
 #include <nap/timer.h>
 
@@ -18,6 +19,7 @@ namespace nap
 	namespace pjlink
 	{
 		using Socket = asio::ip::tcp::socket;
+		using StreamBuf = asio::streambuf;
 	}
 
 	/**
@@ -81,10 +83,15 @@ namespace nap
 
 	private:
 		pjlink::Socket		mSocket;					//< Communication socket
+		pjlink::EndPoint	mEndpoint;					//< Endpoint description
 		PJLinkProjector*	mProjector = nullptr;		//< Projector end-point
 		SteadyTimer			mTimer;						//< Connection timer
 
 		void connect();
+		void authenticate(pjlink::EndPoint ep);
+
+		
+		pjlink::StreamBuf mAuthBuffer;
 	};
 }
 

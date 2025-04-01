@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <asio/io_context.hpp>
 #include <asio/executor_work_guard.hpp>
+#include <asio/ip/tcp.hpp>
 
 namespace nap
 {
@@ -18,6 +19,7 @@ namespace nap
 	{
 		using Context = asio::io_context;
 		using Guard = asio::executor_work_guard<Context::executor_type>;
+		using EndPoint = asio::ip::tcp::endpoint;
 	}
 
 	/**
