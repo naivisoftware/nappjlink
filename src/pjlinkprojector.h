@@ -70,7 +70,7 @@ namespace nap
 
 		std::string mIPAddress = "192.168.0.1";				//< Property: 'IP Address' ip address of the projector on the network
 		nap::ResourcePtr<PJLinkProjectorPool> mPool;		//< Property: 'Pool' Interface that manages the connection
-
+		bool mAllowFailure = false;							//< Property: 'Allow Fail' if the PJLinkProjector is allowed to fail on start
 	private:
 		bool mConnected = false;							
 	};

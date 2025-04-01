@@ -73,12 +73,12 @@ namespace nap
 			nap::Logger::info("%s: response: %s", projector.mID.c_str(), auth_response.c_str());
 
 			// Ensure it's an authentication response
-			if (!error.check(utility::startsWith(auth_response, pjlink::response::authenticate::header),
+			if (!error.check(utility::startsWith(auth_response, pjlink::response::authenticate::header, false),
 				"Invalid authentication response '%s' from projector '%s'", auth_response.c_str(), projector.mID.c_str()))
 				return nullptr;
 
 			// Make sure authentication is disabled
-			if (!error.check(utility::startsWith(auth_response, pjlink::response::authenticate::disabled),
+			if (!error.check(utility::startsWith(auth_response, pjlink::response::authenticate::disabled, false),
 				"PJLink authentication procedure not supported, turn off authentication for '%s'", projector.mID.c_str()))
 				return nullptr;
 
