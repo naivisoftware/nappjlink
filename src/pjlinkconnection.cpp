@@ -34,8 +34,6 @@ namespace nap
 				{
 					nap::Logger::error("Failed (ec '%d') to connect to projector '%s', endpoint: %s, port: %d",
 						ec.value(), id.c_str(), ep.address().to_string().c_str(), ep.port());
-
-					close(ep);
 					return false;
 				}
 
@@ -61,11 +59,11 @@ namespace nap
 		auto f = asio::post(mSocket.get_executor(), asio::use_future([this, ep = mEndpoint]
 			{
 				// Reset timers
-				mTimeout.cancel();
 				if (!mSocket.is_open())
 					return;
 
 				// Close
+				mTimeout.cancel(); 
 				std::error_code ec;
 				mSocket.close(ec);
 				if (ec)
@@ -211,7 +209,7 @@ namespace nap
 
 				// Reset timer
 				mTimeout.cancel();
-				mTimeout = asio::steady_timer(mSocket.get_executor(), nap::Seconds(5));
+				mTimeout = asio::steady_timer(mSocket.get_executor(), nap::Seconds(20));
 				mTimeout.async_wait(std::bind(&PJLinkConnection::timeout, this, std::placeholders::_1));
 			});
 	}
@@ -220,6 +218,7 @@ namespace nap
 	void PJLinkConnection::close(pjlink::EndPoint ep)
 	{
 		std::error_code ec;
+		assert(mSocket.is_open());
 		mSocket.close(ec);
 		if (ec)
 		{

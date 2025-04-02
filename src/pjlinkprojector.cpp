@@ -17,7 +17,7 @@ namespace nap
 	{
 		if (mConnect)
 		{
-			if (getOrCreateConnection(nap::Milliseconds(10000), errorState) == nullptr)
+			if (connect(nap::Seconds(10), errorState) == nullptr)
 				return false;
 		}
 		return true;
@@ -26,15 +26,13 @@ namespace nap
 
 	void PJLinkProjector::stop()
 	{
-		// If there's still a connection, close it
-		std::lock_guard<std::mutex> lock(mConnectionMutex);
-		if (mConnection != nullptr)
+		if (mConnection)
 		{
 			auto cf = mConnection->disconnect();
-			if (cf.wait_for(nap::Milliseconds(10000)) != std::future_status::ready)
-				nap:Logger::warn("Unable to gracefully shut down '%s' connection", mID.c_str());
-
-			mConnection.reset(nullptr);
+			if (cf.wait_for(nap::Seconds(10)) != std::future_status::ready)
+			{
+			nap:Logger::warn("Unable to gracefully shut down '%s' connection", mID.c_str());
+			}
 		}
 	}
 
@@ -42,7 +40,7 @@ namespace nap
 	void PJLinkProjector::set(const std::string& cmd, const std::string& value)
 	{
 		utility::ErrorState error;
-		auto* connection = getOrCreateConnection(nap::Milliseconds(5000), error);
+		auto* connection = connect(nap::Seconds(5), error);
 		if (connection != nullptr)
 		{
 			mConnection->send(PJLinkCommand(cmd, value));
@@ -55,7 +53,7 @@ namespace nap
 	void PJLinkProjector::get(const std::string& cmd)
 	{
 		utility::ErrorState error;
-		auto* connection = getOrCreateConnection(nap::Milliseconds(5000), error);
+		auto* connection = connect(nap::Seconds(5), error);
 		if (connection != nullptr)
 		{
 			mConnection->send(PJLinkCommand(cmd, &pjlink::cmd::query));
@@ -75,7 +73,6 @@ namespace nap
 	void PJLinkProjector::connectionClosed()
 	{
 		std::lock_guard<std::mutex> lock(mConnectionMutex);
-		mConnection = nullptr;
 		mConnected  = false;
 	}
 
@@ -87,13 +84,21 @@ namespace nap
 	}
 
 
-	nap::PJLinkConnection* PJLinkProjector::getOrCreateConnection(nap::Milliseconds timeOut, utility::ErrorState& error)
+	nap::PJLinkConnection* PJLinkProjector::connect(nap::Milliseconds timeOut, utility::ErrorState& error)
 	{
-		// Client active
-		if (mConnection != nullptr)
-			return mConnection.get();
+		// Return active connection when connected
+		std::lock_guard<std::mutex> lock(mConnectionMutex);
+		{
+			if (mConnected)
+			{
+				assert(mConnection != nullptr);
+				return mConnection.get();
+			}
+		}
 
-		// Create client and try to connect
+		// TODO: You 'could' return a connection that is about to be timed out -> Those requests will fail
+		// TODO: It is also possible that the handler, of that message will segfault because read buffers are destroyed
+		// TODO: Therefore we should make a copy here and wait for connection to be closed before dismissing it...
 		mConnection = std::make_unique<PJLinkConnection>(mPool->mContext, *this);
 		auto cf = mConnection->connect();
 
@@ -114,6 +119,7 @@ namespace nap
 			return nullptr;
 		}
 
+		mConnected = true;
 		return mConnection.get();
 	}
 }

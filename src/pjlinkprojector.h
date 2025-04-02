@@ -81,10 +81,10 @@ namespace nap
 		void messageReceived(PJLinkCommand&& message);
 
 		// Establishes a connection
-		PJLinkConnection* getOrCreateConnection(nap::Milliseconds timeOut, utility::ErrorState& error);
+		PJLinkConnection* connect(nap::Milliseconds timeOut, utility::ErrorState& error);
 
 		std::mutex mConnectionMutex;
 		std::unique_ptr<PJLinkConnection> mConnection = nullptr;	//< Client connection
-		bool mConnected = true;
+		bool mConnected = false;
 	};
 }

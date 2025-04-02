@@ -93,7 +93,7 @@ namespace nap
 		pjlink::StreamBuf mAuthBuffer;						//< Authentification buffer
 		pjlink::StreamBuf  mRespBuffer;						//< Response buffer
 		std::queue<PJLinkCommand> mCmds;					//< Commands to send
-		asio::steady_timer mTimeout;							//< Timeout connection timer
+		asio::steady_timer mTimeout;						//< Timeout connection timer
 	};
 }
 
