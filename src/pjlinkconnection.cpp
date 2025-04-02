@@ -21,7 +21,7 @@ using namespace asio::ip;
 namespace nap
 {
 	PJLinkConnection::PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector) :
-		mSocket(context), mProjector(projector), mTimeout(context, nap::Seconds(5))
+		mSocket(context), mProjector(projector), mTimeout(context, nap::Seconds(20))
 	{ }
 
 
