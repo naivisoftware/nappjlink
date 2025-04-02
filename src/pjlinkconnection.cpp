@@ -20,7 +20,7 @@ using namespace asio::ip;
 namespace nap
 {
 	PJLinkConnection::PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector) :
-		mSocket(context), mProjector(&projector)
+		mSocket(context), mProjector(projector)
 	{
 		connect();
 	}
@@ -28,8 +28,8 @@ namespace nap
 
 	void PJLinkConnection::connect()
 	{
-		mEndpoint = tcp::endpoint(address::from_string(mProjector->mIPAddress), pjlink::port);
-		mSocket.async_connect(mEndpoint, [this, ep = mEndpoint, id = mProjector->mID](std::error_code ec)
+		mEndpoint = tcp::endpoint(address::from_string(mProjector.mIPAddress), pjlink::port);
+		mSocket.async_connect(mEndpoint, [this, ep = mEndpoint, id = mProjector.mID](std::error_code ec)
 			{
 				if (ec)
 				{
@@ -175,23 +175,6 @@ namespace nap
 					reply.mResponse.substr(0, reply.mResponse.size()-1).c_str(),
 					reply.mCommand.substr(0, reply.mCommand.size()-1).c_str());
 			});
-	}
-
-
-	nap::PJLinkConnection& PJLinkConnection::operator=(PJLinkConnection&& other) noexcept
-	{
-		mSocket = std::move(other.mSocket);
-		mProjector = other.mProjector;
-		other.mProjector = nullptr;
-		return *this;
-	}
-
-
-	PJLinkConnection::PJLinkConnection(PJLinkConnection&& other) noexcept:
-		mSocket(std::move(other.mSocket)),
-		mProjector(other.mProjector)
-	{
-		other.mProjector = nullptr;
 	}
 
 

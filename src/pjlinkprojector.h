@@ -48,7 +48,7 @@ namespace nap
 		 * Mute both projector audio and video output.
 		 * @param value if audio and video output should be muted
 		 */
-		void mute(bool value)											{ set(pjlink::cmd::set::avmute, value ? "31" : "30"); }
+		void avMute(bool value)											{ set(pjlink::cmd::set::avmute, value ? "31" : "30"); }
 
 		/**
 		 * Sends a control command to the projector a-sync.

@@ -49,24 +49,24 @@ namespace nap
 		PJLinkConnection& operator=(const PJLinkConnection&) = delete;
 		PJLinkConnection(PJLinkConnection&) = delete;
 
-		// Explicitly enable move
-		PJLinkConnection& operator=(PJLinkConnection&& other) noexcept;
-		PJLinkConnection(PJLinkConnection&& other) noexcept;
+		// Disable move
+		PJLinkConnection& operator=(PJLinkConnection&& other) = delete;
+		PJLinkConnection(PJLinkConnection&& other) = delete;
 
 		/**
 		 * @return projector end-point
 		 */
-		const PJLinkProjector& getProjector() const		{ assert(mProjector != nullptr); return *mProjector; }
+		const PJLinkProjector& getProjector() const		{ return mProjector; }
 
 		/**
 		 * Compare if they manage the same projector instance
 		 */
-		bool operator == (const PJLinkProjector& c)		{ return &c == mProjector; }
+		bool operator == (const PJLinkProjector& c)		{ return &c == &mProjector; }
 
 		/**
 		 * Compare if they manage the same projector instance
 		 */
-		bool operator != (const PJLinkProjector& c)		{ return &c != mProjector; }
+		bool operator != (const PJLinkProjector& c)		{ return &c != &mProjector; }
 
 		/**
 		 * Session length in seconds
@@ -78,7 +78,7 @@ namespace nap
 
 		pjlink::Socket		mSocket;					//< Communication socket
 		pjlink::EndPoint	mEndpoint;					//< Endpoint description
-		PJLinkProjector*	mProjector = nullptr;		//< Projector end-point
+		PJLinkProjector&	mProjector;					//< Projector end-point
 		SteadyTimer			mTimer;						//< Connection timer
 
 		void connect();
