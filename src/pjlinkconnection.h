@@ -11,9 +11,11 @@
 // External includes
 #include <asio/ip/tcp.hpp>
 #include <asio/streambuf.hpp>
+#include <asio/steady_timer.hpp>
 #include <utility/dllexport.h>
 #include <nap/timer.h>
 #include <queue>
+#include <future>
 
 namespace nap
 {
@@ -68,29 +70,30 @@ namespace nap
 		 */
 		bool operator != (const PJLinkProjector& c)		{ return &c != &mProjector; }
 
-		/**
-		 * Session length in seconds
-		 */
-		double session() const							{ return mTimer.getElapsedTime(); }
-
 	private:
 		friend class PJLinkProjector;
 
 		pjlink::Socket		mSocket;					//< Communication socket
 		pjlink::EndPoint	mEndpoint;					//< Endpoint description
 		PJLinkProjector&	mProjector;					//< Projector end-point
-		SteadyTimer			mTimer;						//< Connection timer
 
-		void connect();
-		void authenticate(pjlink::EndPoint ep);
+		// Called from client thread
+		std::future<bool> connect();
+		std::future<void> disconnect();
+
+		// Called from asio execution thread
+		bool authenticate(pjlink::EndPoint ep);
 		void send(PJLinkCommand&& cmd);
 		void write(pjlink::EndPoint ep);
 		void read(pjlink::EndPoint ep, PJLinkCommand&& cmd);
+		void close(pjlink::EndPoint ep);
+		void timeout(const std::error_code& ec);
 
 		// A-sync objects -> accessed from socket execution context
 		pjlink::StreamBuf mAuthBuffer;						//< Authentification buffer
 		pjlink::StreamBuf  mRespBuffer;						//< Response buffer
 		std::queue<PJLinkCommand> mCmds;					//< Commands to send
+		asio::steady_timer mTimeout;							//< Timeout connection timer
 	};
 }
 

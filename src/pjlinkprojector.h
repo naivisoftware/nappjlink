@@ -12,6 +12,7 @@
 // External includes
 #include <nap/device.h>
 #include <nap/resourceptr.h>
+#include <mutex>
 
 namespace nap
 {
@@ -63,10 +64,27 @@ namespace nap
 		 */
 		void get(const std::string& cmd);
 
+		bool mConnect = false;									//< Property: 'ConnectOnStartup' Connect to projector on startup, startup will fail if connection can't be established
 		std::string mIPAddress = "192.168.0.1";					//< Property: 'IP Address' ip address of the projector on the network
 		nap::ResourcePtr<PJLinkProjectorPool> mPool;			//< Property: 'Pool' Interface that manages the connection
 
 	private:
-		std::unique_ptr<PJLinkConnection> mClient = nullptr;	//< Client connection
+		friend class PJLinkConnection;
+
+		// Called by the PJLink client when connection is opened
+		void connectionOpened();
+
+		// Called by the PJLink client when connection is closed
+		void connectionClosed();
+
+		// Called by the PJLink client when it receives a message from the projector
+		void messageReceived(PJLinkCommand&& message);
+
+		// Establishes a connection
+		PJLinkConnection* getOrCreateConnection(nap::Milliseconds timeOut, utility::ErrorState& error);
+
+		std::mutex mConnectionMutex;
+		std::unique_ptr<PJLinkConnection> mConnection = nullptr;	//< Client connection
+		bool mConnected = true;
 	};
 }
