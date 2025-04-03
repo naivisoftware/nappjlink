@@ -59,11 +59,33 @@ namespace nap
 		void muteOff()													{ send(PJLinkSetAVMuteCommand(false)); }
 
 		/**
-		 * Sends a get or set command to the projector a-sync.
+		 * Sends a set (control) command to the projector a-sync.
 		 * This function returns immediately, the command is queued.
 		 * @param cmd control command to send
 		 */
+		void set(PJLinkSetCommand&& cmd)								{ send(std::move(cmd)); }
+
+		/**
+		 * Sends a get (query) command to the projector a-sync.
+		 * This function returns immediately, the command is queued.
+		 * @param cmd query command to send
+		 */
+		void get(PJLinkGetCommand&& cmd)								{ send(std::move(cmd)); }
+
+		/**
+		 * Sends a PJLink command to the projector a-sync.
+		 * This function returns immediately, the command is queued.
+		 * @param cmd command to send
+		 */
 		void send(PJLinkCommand&& cmd);
+
+		/**
+		 * Creates and sends a PJLink command to the projector a-sync.
+		 * This function returns immediately, the command is queued.
+		 * @param body pjlink command body (see spec)
+		 * @param value pjlink value (see spec)
+		 */
+		void send(const char* body, const char* value)					{ send(PJLinkCommand(body, value)); }
 
 		bool mConnect = false;									//< Property: 'ConnectOnStartup' Connect to projector on startup, startup will fail if connection can't be established
 		std::string mIPAddress = "192.168.0.1";					//< Property: 'IP Address' ip address of the projector on the network
