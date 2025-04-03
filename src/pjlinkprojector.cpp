@@ -76,6 +76,7 @@ namespace nap
 	{
 		std::lock_guard<std::mutex> lock(mConnectionMutex);
 		mConnected  = false;
+		//mConnection = nullptr;
 	}
 
 

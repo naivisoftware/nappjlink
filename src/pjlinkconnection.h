@@ -85,12 +85,13 @@ namespace nap
 		void read(PJLinkCommand&& cmd);
 		void close();
 		void timeout(const std::error_code& ec);
+		void setTimer();
 
 		// A-sync objects -> accessed from socket execution context
 		pjlink::StreamBuf mAuthBuffer;						//< Authentification buffer
 		pjlink::StreamBuf  mRespBuffer;						//< Response buffer
 		std::queue<PJLinkCommand> mCmds;					//< Commands to send
-		asio::steady_timer mTimeout;						//< Timeout connection timer
+		std::unique_ptr<asio::steady_timer> mTimeout;		//< Timeout connection timer
 
 		// Constructor -> private, use create()
 		PJLinkConnection(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector);

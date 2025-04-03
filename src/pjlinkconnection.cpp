@@ -23,8 +23,7 @@ namespace nap
 	PJLinkConnection::PJLinkConnection(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector) :
 		mSocket(context),
 		mProjector(projector),
-		mAddress(address),
-		mTimeout(context, nap::Seconds(20))
+		mAddress(address)
 	{ }
 
 
@@ -61,7 +60,7 @@ namespace nap
 				if (handle->authenticate())
 				{
 					// Start running timeout timer
-					handle->mTimeout.async_wait(std::bind(&PJLinkConnection::timeout, handle, std::placeholders::_1));
+					handle->setTimer();
 					return true;
 				}
 				return false;
@@ -81,7 +80,6 @@ namespace nap
 					return;
 
 				// Close
-				handle->mTimeout.cancel();
 				handle->close();
 			}
 		));
@@ -217,9 +215,7 @@ namespace nap
 					reply.mCommand.substr(0, reply.mCommand.size()-1).c_str());
 
 				// Reset timer
-				handle->mTimeout.cancel();
-				handle->mTimeout = asio::steady_timer(handle->mSocket.get_executor(), nap::Seconds(20));
-				handle->mTimeout.async_wait(std::bind(&PJLinkConnection::timeout, handle, std::placeholders::_1));
+				handle->setTimer();
 			});
 	}
 
@@ -236,7 +232,8 @@ namespace nap
 			return;
 		}
 
-		// Connection success -> verify authentification
+		// Cancel outstanding timing operations
+		mTimeout.reset(nullptr);
 		nap::Logger::info("%s: Connection closed", mAddress.to_string().c_str());
 		mProjector.connectionClosed();
 	}
@@ -252,4 +249,12 @@ namespace nap
 		}
 	}
 
+
+	void PJLinkConnection::setTimer()
+	{
+		mTimeout = std::make_unique<asio::steady_timer>(mSocket.get_executor(), nap::Seconds(20));
+		mTimeout->async_wait(
+			std::bind(&PJLinkConnection::timeout, shared_from_this(), std::placeholders::_1)
+		);
+	}
 }
