@@ -71,9 +71,6 @@ namespace nap
 	private:
 		friend class PJLinkConnection;
 
-		// Called by the PJLink client when connection is opened
-		void connectionOpened();
-
 		// Called by the PJLink client when connection is closed
 		void connectionClosed();
 
@@ -81,10 +78,12 @@ namespace nap
 		void messageReceived(PJLinkCommand&& message);
 
 		// Establishes a connection
-		PJLinkConnection* connect(nap::Milliseconds timeOut, utility::ErrorState& error);
+		std::shared_ptr<PJLinkConnection> connect(nap::Milliseconds timeOut, utility::ErrorState& error);
+
+		// Get current connection handle
+		std::shared_ptr<PJLinkConnection> getConnection();
 
 		std::mutex mConnectionMutex;
 		std::shared_ptr<PJLinkConnection> mConnection = nullptr;	//< Client connection
-		bool mConnected = false;
 	};
 }

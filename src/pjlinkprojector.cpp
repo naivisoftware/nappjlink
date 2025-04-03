@@ -30,9 +30,10 @@ namespace nap
 
 	void PJLinkProjector::stop()
 	{
-		if (mConnection != nullptr)
+		auto connection = getConnection();
+		if (connection != nullptr)
 		{
-			auto cf = mConnection->disconnect();
+			auto cf = connection->disconnect();
 			if (cf.wait_for(nap::Seconds(10)) != std::future_status::ready)
 			{
 				nap:Logger::warn("Unable to gracefully shut down '%s' connection", mID.c_str());
@@ -44,7 +45,8 @@ namespace nap
 	void PJLinkProjector::set(const std::string& cmd, const std::string& value)
 	{
 		utility::ErrorState error;
-		if (connect(nap::Seconds(5), error) == nullptr)
+		auto connection = connect(nap::Seconds(5), error);
+		if (connection == nullptr)
 		{
 			nap::Logger::warn(error.toString());
 			return;
@@ -55,30 +57,16 @@ namespace nap
 
 	void PJLinkProjector::get(const std::string& cmd)
 	{
-		utility::ErrorState error;
-		if (connect(nap::Seconds(5), error) == nullptr)
-		{
-			nap::Logger::warn(error.toString());
-			return;
-		}
-		mConnection->send(PJLinkCommand(cmd, &pjlink::cmd::query));
-	}
-
-
-	void PJLinkProjector::connectionOpened()
-	{
-		std::lock_guard<std::mutex> lock(mConnectionMutex);
-		mConnected = true;
+		set(cmd, &pjlink::cmd::query);
 	}
 
 
 	void PJLinkProjector::connectionClosed()
 	{
+		// Clear current connection
 		std::lock_guard<std::mutex> lock(mConnectionMutex);
-		mConnected  = false;
-		//mConnection = nullptr;
+		mConnection = nullptr;
 	}
-
 
 
 	void PJLinkProjector::messageReceived(PJLinkCommand&& message)
@@ -87,48 +75,47 @@ namespace nap
 	}
 
 
-	nap::PJLinkConnection* PJLinkProjector::connect(nap::Milliseconds timeOut, utility::ErrorState& error)
+	std::shared_ptr<PJLinkConnection> PJLinkProjector::connect(nap::Milliseconds timeOut, utility::ErrorState& error)
 	{
-		// Return active connection when connected
-		std::lock_guard<std::mutex> lock(mConnectionMutex);
-		{
-			if (mConnected)
-			{
-				assert(mConnection != nullptr);
-				return mConnection.get();
-			}
-		}
+		// Already connected
+		auto client = getConnection();
+		if (client != nullptr)
+			return client;
 
-		// TODO: You 'could' (in theory) return a connection that is about to be timed out
-		// TODO: Those messages will most likely fail -> we should counter that
+		// Make ip address
 		std::error_code ec;
 		auto ip_address = asio::ip::make_address(mIPAddress, ec);
 		if (!error.check(!ec, "Invalid ip address: '%s'", mIPAddress.c_str()))
 			return nullptr;
 
 		// Instantiate connection
-		mConnection = PJLinkConnection::create(mPool->mContext, ip_address, *this);
-		auto cf = mConnection->connect();
+		client = PJLinkConnection::create(mPool->mContext, ip_address, *this);
 
 		// Wait until established, including authorization
 		// TODO: Give option not to block and continue execution
+		auto cf = client->connect();
 		if (!error.check(cf.wait_for(timeOut) == std::future_status::ready,
 			"Projector connection timed out"))
-		{
-			mConnection = nullptr;
 			return nullptr;
-		}
 
 		// Check if connection is valid
 		bool rvalue = cf.get();
 		if (!error.check(rvalue, "Unable to connect to projector at '%s', port: %d",
 			mIPAddress.c_str(), pjlink::port))
-		{
-			mConnection = nullptr;
 			return nullptr;
-		}
 
-		mConnected = true;
-		return mConnection.get();
+		// Store for future reference
+		{
+			std::lock_guard<std::mutex> lock(mConnectionMutex);
+			mConnection = client;
+		}
+		return client;
+	}
+
+
+	std::shared_ptr<nap::PJLinkConnection> PJLinkProjector::getConnection()
+	{
+		std::lock_guard<std::mutex> lock(mConnectionMutex);
+		return mConnection;
 	}
 }
