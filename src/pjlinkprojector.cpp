@@ -26,12 +26,12 @@ namespace nap
 
 	void PJLinkProjector::stop()
 	{
-		if (mConnection)
+		if (mConnection != nullptr)
 		{
 			auto cf = mConnection->disconnect();
 			if (cf.wait_for(nap::Seconds(10)) != std::future_status::ready)
 			{
-			nap:Logger::warn("Unable to gracefully shut down '%s' connection", mID.c_str());
+				nap:Logger::warn("Unable to gracefully shut down '%s' connection", mID.c_str());
 			}
 		}
 	}
@@ -40,26 +40,24 @@ namespace nap
 	void PJLinkProjector::set(const std::string& cmd, const std::string& value)
 	{
 		utility::ErrorState error;
-		auto* connection = connect(nap::Seconds(5), error);
-		if (connection != nullptr)
+		if (connect(nap::Seconds(5), error) == nullptr)
 		{
-			mConnection->send(PJLinkCommand(cmd, value));
+			nap::Logger::warn(error.toString());
 			return;
 		}
-		nap::Logger::warn(error.toString());
+		mConnection->send(PJLinkCommand(cmd, value));
 	}
 
 
 	void PJLinkProjector::get(const std::string& cmd)
 	{
 		utility::ErrorState error;
-		auto* connection = connect(nap::Seconds(5), error);
-		if (connection != nullptr)
+		if (connect(nap::Seconds(5), error) == nullptr)
 		{
-			mConnection->send(PJLinkCommand(cmd, &pjlink::cmd::query));
+			nap::Logger::warn(error.toString());
 			return;
 		}
-		nap::Logger::warn(error.toString());
+		mConnection->send(PJLinkCommand(cmd, &pjlink::cmd::query));
 	}
 
 

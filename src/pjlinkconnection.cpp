@@ -70,23 +70,16 @@ namespace nap
 	std::future<void> PJLinkConnection::disconnect()
 	{
 		// Schedule task to close socket when connected
-		auto f = asio::post(mSocket.get_executor(), asio::use_future([this, ep = mEndpoint]
+		auto handle = shared_from_this();
+		auto f = asio::post(mSocket.get_executor(), asio::use_future([handle]
 			{
 				// Reset timers
-				if (!mSocket.is_open())
+				if (!handle->mSocket.is_open())
 					return;
 
 				// Close
-				mTimeout.cancel(); 
-				std::error_code ec;
-				mSocket.close(ec);
-				if (ec)
-				{
-					nap::Logger::error("Close request failed (ec '%d'), projector endpoint : %s",
-						ec.value(), ep.address().to_string().c_str());
-					return;
-				}
-				nap::Logger::info("%s: Connection closed", ep.address().to_string().c_str());
+				handle->mTimeout.cancel();
+				handle->close();
 			}
 		));
 		return f;
@@ -256,7 +249,4 @@ namespace nap
 		}
 	}
 
-
-	PJLinkConnection::~PJLinkConnection()
-	{ }
 }

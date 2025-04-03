@@ -43,11 +43,6 @@ namespace nap
 		 */
 		static std::shared_ptr<PJLinkConnection> create(pjlink::Context& context, PJLinkProjector& projector);
 
-		/**
-		 * Closes connection to projector on destruction
-		 */
-		~PJLinkConnection();
-
 		// Disable copy
 		PJLinkConnection& operator=(const PJLinkConnection&) = delete;
 		PJLinkConnection(PJLinkConnection&) = delete;
@@ -98,21 +93,5 @@ namespace nap
 
 		// Constructor -> private, use create()
 		PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector);
-	};
-}
-
-//////////////////////////////////////////////////////////////////////////
-// HASH
-//////////////////////////////////////////////////////////////////////////
-
-namespace std
-{
-	template<>
-	struct hash<nap::PJLinkConnection>
-	{
-		size_t operator()(const nap::PJLinkConnection& v) const
-		{
-			return std::hash<const nap::PJLinkProjector*>{}( &(v.getProjector()) );
-		}
 	};
 }
