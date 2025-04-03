@@ -37,7 +37,8 @@ namespace nap
 			if (cf.wait_for(nap::Seconds(10)) != std::future_status::ready)
 				nap:Logger::warn("Unable to gracefully shut down '%s' connection", mID.c_str());
 
-			connectionClosed();
+			// Connection should be reset after a disconnect
+			assert(mConnection == nullptr);
 		}
 	}
 

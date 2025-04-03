@@ -75,22 +75,12 @@ namespace nap
 		auto handle = shared_from_this();
 		auto f = asio::post(mSocket.get_executor(), asio::use_future([handle]
 			{
-				// Cancel and delete timers
-				handle->mTimeout.reset(nullptr);
-
 				// Bail if we're already shut down
 				if (!handle->mSocket.is_open())
 					return;
 
-				// Close socket
-				std::error_code ec;
-				handle->mSocket.close(ec);
-				if (ec)
-				{
-					nap::Logger::error("Close request failed (ec '%d'), projector endpoint : %s",
-						ec, handle->mAddress.to_string().c_str());
-					return;
-				}
+				// Close
+				handle->close();
 			}
 		));
 		return f;
