@@ -26,17 +26,6 @@ namespace nap
 		RTTI_ENABLE(Device)
 	public:
 		/**
-		 * Connect the projector
-		 * @param errorState the error if connecting fails
-		 */
-		bool start(utility::ErrorState& errorState) override;
-
-		/**
-		 * Disconnect the projector
-		 */
-		void stop() override;
-
-		/**
 		 * Turns the projector on
 		 */
 		void powerOn()													{ send(PJLinkSetPowerCommand(true)); }
@@ -86,6 +75,19 @@ namespace nap
 		 * @param value pjlink value (see spec)
 		 */
 		void send(const char* body, const char* value)					{ send(PJLinkCommand(body, value)); }
+
+		/**
+		 * Connects the projector if connect on startup is true.
+		 * Called by core after initialization.
+		 * @param errorState the error if connecting fails
+		 */
+		bool start(utility::ErrorState& errorState) override;
+
+		/**
+		 * Disconnect the projector.
+		 * Called by core before destruction.
+		 */
+		void stop() override;
 
 		bool mConnect = false;									//< Property: 'ConnectOnStartup' Connect to projector on startup, startup will fail if connection can't be established
 		std::string mIPAddress = "192.168.0.1";					//< Property: 'IP Address' ip address of the projector on the network
