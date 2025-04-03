@@ -20,20 +20,23 @@ using namespace asio::ip;
 
 namespace nap
 {
-	PJLinkConnection::PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector) :
-		mSocket(context), mProjector(projector), mTimeout(context, nap::Seconds(20))
+	PJLinkConnection::PJLinkConnection(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector) :
+		mSocket(context),
+		mProjector(projector),
+		mAddress(address),
+		mTimeout(context, nap::Seconds(20))
 	{ }
 
 
-	std::shared_ptr<nap::PJLinkConnection> PJLinkConnection::create(pjlink::Context& context, PJLinkProjector& projector)
+	std::shared_ptr<nap::PJLinkConnection> PJLinkConnection::create(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector)
 	{
-		return std::shared_ptr<PJLinkConnection>(new PJLinkConnection(context, projector));
+		return std::shared_ptr<PJLinkConnection>(new PJLinkConnection(context, address, projector));
 	}
 
 
 	std::future<bool> PJLinkConnection::connect()
 	{
-		mEndpoint = mEndpoint = tcp::endpoint(address::from_string(mProjector.mIPAddress), pjlink::port);
+		mEndpoint = tcp::endpoint(mAddress, pjlink::port);
 		auto handle = shared_from_this();
 		auto cf = mSocket.async_connect(mEndpoint, asio::use_future([handle](std::error_code ec)
 			{
@@ -43,14 +46,14 @@ namespace nap
 					nap::Logger::error("Failed (ec '%d') to connect to projector '%s', endpoint: %s, port: %d",
 						ec.value(),
 						handle->mProjector.mID.c_str(),
-						handle->mEndpoint.address().to_string().c_str(),
+						handle->mAddress.to_string().c_str(),
 						handle->mEndpoint.port());
 					return false;
 				}
 
 				// Connection success -> verify authentification
 				nap::Logger::info("%s: Connected to projector '%s', port: %d",
-					handle->mEndpoint.address().to_string().c_str(),
+					handle->mAddress.to_string().c_str(),
 					handle->mProjector.mID.c_str(),
 					handle->mEndpoint.port());
 
@@ -93,14 +96,14 @@ namespace nap
 		if (ec)
 		{
 			nap::Logger::error("Failed (ec '%d') to authorize projector at endpoint: %s",
-				ec.value(), mEndpoint.address().to_string().c_str());
+				ec.value(), mAddress.to_string().c_str());
 
 			close();
 			return false;
 		}
 
 		// Commit to string
-		nap::Logger::info("%s: Received %d authorization bytes", mEndpoint.address().to_string().c_str(), size);
+		nap::Logger::info("%s: Received %d authorization bytes", mAddress.to_string().c_str(), size);
 		std::istream is(&mAuthBuffer); std::string response;
 		std::getline(std::istream(&mAuthBuffer), response, pjlink::terminator);
 
@@ -108,7 +111,7 @@ namespace nap
 		if (!utility::startsWith(response, pjlink::response::authenticate::header, false))
 		{
 			nap::Logger::error("Projector '%s' authentication failed, invalid response: %s",
-				mEndpoint.address().to_string().c_str(), response.c_str());
+				mAddress.to_string().c_str(), response.c_str());
 
 			close();
 			return false;
@@ -119,7 +122,7 @@ namespace nap
 		{
 			nap::Logger::error("Projector authentication requested -> not supported, \
 						disable authentication at endpoint: %s",
-				mEndpoint.address().to_string().c_str());
+				mAddress.to_string().c_str());
 
 			close();
 			return true;
@@ -127,7 +130,7 @@ namespace nap
 
 		// All good
 		nap::Logger::info("%s: Authentication succeeded",
-			mEndpoint.address().to_string().c_str());
+			mAddress.to_string().c_str());
 
 		// Start connection timer
 		return true;
@@ -155,7 +158,7 @@ namespace nap
 		auto& cmd_ref = mCmds.front();
 		auto write_buffer = asio::buffer(cmd_ref.data(), cmd_ref.size());
 
-		nap::Logger::info("%s: Writing '%s'", mEndpoint.address().to_string().c_str(),
+		nap::Logger::info("%s: Writing '%s'", mAddress.to_string().c_str(),
 			cmd_ref.getCommand().substr(0, cmd_ref.size() - 1).c_str());
 
 		assert(mSocket.is_open());
@@ -166,14 +169,14 @@ namespace nap
 				if (ec)
 				{
 					nap::Logger::error("Writing failed (ec '%d'), projector endpoint: %s",
-						ec.value(), handle->mEndpoint.address().to_string().c_str());
+						ec.value(), handle->mAddress.to_string().c_str());
 
 					handle->close();
 					return;
 				}
 
 				// Writing succeeded -> schedule a response read before attempting a new write
-				nap::Logger::info("%s: Written %d byte(s)", handle->mEndpoint.address().to_string().c_str(), size);
+				nap::Logger::info("%s: Written %d byte(s)", handle->mAddress.to_string().c_str(), size);
 				auto current = handle->mCmds.front(); handle->mCmds.pop();
 				handle->read(std::move(current));
 
@@ -193,14 +196,14 @@ namespace nap
 				if (ec)
 				{
 					nap::Logger::error("Reading failed (ec '%d'), projector endpoint : %s",
-						ec.value(), handle->mEndpoint.address().to_string().c_str());
+						ec.value(), handle->mAddress.to_string().c_str());
 
 					handle->close();
 					return;
 				}
 
 				// Read succeeded
-				nap::Logger::info("%s: Read %d byte(s)", handle->mEndpoint.address().to_string().c_str(), size);
+				nap::Logger::info("%s: Read %d byte(s)", handle->mAddress.to_string().c_str(), size);
 
 				// Commit response from buffer input to response 
 				PJLinkCommand reply(src);
@@ -209,7 +212,7 @@ namespace nap
 
 				// All good
 				nap::Logger::info("%s: Reply '%s', cmd: '%s'",
-					handle->mEndpoint.address().to_string().c_str(),
+					handle->mAddress.to_string().c_str(),
 					reply.mResponse.substr(0, reply.mResponse.size()-1).c_str(),
 					reply.mCommand.substr(0, reply.mCommand.size()-1).c_str());
 
@@ -229,12 +232,12 @@ namespace nap
 		if (ec)
 		{
 			nap::Logger::error("Close request failed (ec '%d'), projector endpoint : %s",
-				ec.value(), mEndpoint.address().to_string().c_str());
+				ec.value(), mAddress.to_string().c_str());
 			return;
 		}
 
 		// Connection success -> verify authentification
-		nap::Logger::info("%s: Connection closed",mEndpoint.address().to_string().c_str());
+		nap::Logger::info("%s: Connection closed", mAddress.to_string().c_str());
 		mProjector.connectionClosed();
 	}
 
@@ -243,7 +246,7 @@ namespace nap
 	{
 		if (!ec)
 		{
-			nap::Logger::info("%s: Connection timed out", mEndpoint.address().to_string().c_str());
+			nap::Logger::info("%s: Connection timed out", mAddress.to_string().c_str());
 			assert(mSocket.is_open());
 			close();
 		}

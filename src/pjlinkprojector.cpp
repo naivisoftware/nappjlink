@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+// Local includes
 #include "pjlinkprojector.h"
+
+// External includes
 #include <nap/logger.h>
+#include <asio/ip/address.hpp>
 
 RTTI_BEGIN_CLASS(nap::PJLinkProjector)
-RTTI_PROPERTY("IP Address", &nap::PJLinkProjector::mIPAddress, nap::rtti::EPropertyMetaData::Required, "IP address of the projector on the network")
-RTTI_PROPERTY("Pool", &nap::PJLinkProjector::mPool, nap::rtti::EPropertyMetaData::Required, "Interface that manages the connection")
-RTTI_PROPERTY("ConnectOnStartup", &nap::PJLinkProjector::mConnect, nap::rtti::EPropertyMetaData::Default, "Connect to projector on startup, init will fail if connection can't be established")
+	RTTI_PROPERTY("IP Address", &nap::PJLinkProjector::mIPAddress, nap::rtti::EPropertyMetaData::Required, "IP address of the projector on the network")
+	RTTI_PROPERTY("Pool", &nap::PJLinkProjector::mPool, nap::rtti::EPropertyMetaData::Required, "Interface that manages the connection")
+	RTTI_PROPERTY("ConnectOnStartup", &nap::PJLinkProjector::mConnect, nap::rtti::EPropertyMetaData::Default, "Connect to projector on startup, init will fail if connection can't be established")
 RTTI_END_CLASS
 
 namespace nap
@@ -94,11 +98,19 @@ namespace nap
 			}
 		}
 
-		// TODO: You 'could' return a connection that is about to be timed out -> Those requests will fail
-		mConnection = PJLinkConnection::create(mPool->mContext, *this);
+		// TODO: You 'could' (in theory) return a connection that is about to be timed out
+		// TODO: Those messages will most likely fail -> we should counter that
+		std::error_code ec;
+		auto ip_address = asio::ip::make_address(mIPAddress, ec);
+		if (!error.check(!ec, "Invalid ip address: '%s'", mIPAddress.c_str()))
+			return nullptr;
+
+		// Instantiate connection
+		mConnection = PJLinkConnection::create(mPool->mContext, ip_address, *this);
 		auto cf = mConnection->connect();
 
-		// Wait until established
+		// Wait until established, including authorization
+		// TODO: Give option not to block and continue execution
 		if (!error.check(cf.wait_for(timeOut) == std::future_status::ready,
 			"Projector connection timed out"))
 		{

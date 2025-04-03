@@ -20,6 +20,7 @@ namespace nap
 		using Context = asio::io_context;
 		using Guard = asio::executor_work_guard<Context::executor_type>;
 		using EndPoint = asio::ip::tcp::endpoint;
+		using Address = asio::ip::address;
 	}
 
 	/**

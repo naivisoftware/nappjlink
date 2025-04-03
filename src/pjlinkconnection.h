@@ -41,7 +41,7 @@ namespace nap
 		 * @param projector projector listening interface
 		 * @return pjlink connection
 		 */
-		static std::shared_ptr<PJLinkConnection> create(pjlink::Context& context, PJLinkProjector& projector);
+		static std::shared_ptr<PJLinkConnection> create(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector);
 
 		// Disable copy
 		PJLinkConnection& operator=(const PJLinkConnection&) = delete;
@@ -70,6 +70,7 @@ namespace nap
 		friend class PJLinkProjector;
 
 		pjlink::Socket		mSocket;					//< Communication socket
+		pjlink::Address		mAddress;					//< Endpoint address description
 		pjlink::EndPoint	mEndpoint;					//< Endpoint description
 		PJLinkProjector&	mProjector;					//< Projector end-point
 
@@ -92,6 +93,6 @@ namespace nap
 		asio::steady_timer mTimeout;						//< Timeout connection timer
 
 		// Constructor -> private, use create()
-		PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector);
+		PJLinkConnection(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector);
 	};
 }
