@@ -29,7 +29,9 @@ namespace nap
 
 	std::shared_ptr<nap::PJLinkConnection> PJLinkConnection::create(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector)
 	{
-		return std::shared_ptr<PJLinkConnection>(new PJLinkConnection(context, address, projector));
+		return std::shared_ptr<PJLinkConnection>(
+			new PJLinkConnection(context, address, projector)
+		);
 	}
 
 
@@ -42,18 +44,16 @@ namespace nap
 				// Handle error
 				if (ec)
 				{
-					nap::Logger::error("Failed (ec '%d') to connect to projector '%s', endpoint: %s, port: %d",
+					nap::Logger::error("Failed (ec '%d') to connect to endpoint: %s, port: %d",
 						ec.value(),
-						handle->mProjector.mID.c_str(),
 						handle->mAddress.to_string().c_str(),
 						handle->mEndpoint.port());
 					return false;
 				}
 
 				// Connection success -> verify authentification
-				nap::Logger::info("%s: Connected to projector '%s', port: %d",
+				nap::Logger::info("%s: Connected, port: %d",
 					handle->mAddress.to_string().c_str(),
-					handle->mProjector.mID.c_str(),
 					handle->mEndpoint.port());
 
 				// Authenticate
@@ -224,7 +224,8 @@ namespace nap
 					reply.mResponse.substr(0, reply.mResponse.size()-1).c_str(),
 					reply.mCommand.substr(0, reply.mCommand.size()-1).c_str());
 
-				// Reset timer
+				// Forward response and set timer
+				handle->mProjector.response(std::move(reply));
 				handle->setTimer();
 			});
 	}

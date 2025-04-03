@@ -69,9 +69,10 @@ namespace nap
 	}
 
 
-	void PJLinkProjector::messageReceived(PJLinkCommand&& message)
+	void PJLinkProjector::response(PJLinkCommand&& message)
 	{
-		// TODO: Forward!
+		// Notify listeners
+		ResponseReceived(message);
 	}
 
 

@@ -13,6 +13,7 @@
 #include <nap/device.h>
 #include <nap/resourceptr.h>
 #include <mutex>
+#include <nap/signalslot.h>
 
 namespace nap
 {
@@ -46,10 +47,16 @@ namespace nap
 		void powerOff()													{ set(pjlink::cmd::set::power, "0"); }
 
 		/**
-		 * Mute both projector audio and video output.
+		 * Mute projector audio and video output.
 		 * @param value if audio and video output should be muted
 		 */
-		void avMute(bool value)											{ set(pjlink::cmd::set::avmute, value ? "31" : "30"); }
+		void muteOn()													{ set(pjlink::cmd::set::avmute, "31"); }
+
+		/**
+		 * Don't mute projector audio and video output.
+		 * @param value if audio and video output should be muted
+		 */
+		void muteOff()													{ set(pjlink::cmd::set::avmute, "30"); }
 
 		/**
 		 * Sends a control command to the projector a-sync.
@@ -68,6 +75,9 @@ namespace nap
 		std::string mIPAddress = "192.168.0.1";					//< Property: 'IP Address' ip address of the projector on the network
 		nap::ResourcePtr<PJLinkProjectorPool> mPool;			//< Property: 'Pool' Interface that manages the connection
 
+		// Signal called when receiving a pj link response
+		nap::Signal<const PJLinkCommand&> ResponseReceived;			
+
 	private:
 		friend class PJLinkConnection;
 
@@ -75,7 +85,7 @@ namespace nap
 		void connectionClosed();
 
 		// Called by the PJLink client when it receives a message from the projector
-		void messageReceived(PJLinkCommand&& message);
+		void response(PJLinkCommand&& message);
 
 		// Establishes a connection
 		std::shared_ptr<PJLinkConnection> connect(nap::Milliseconds timeOut, utility::ErrorState& error);

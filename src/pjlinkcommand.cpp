@@ -31,4 +31,15 @@ namespace nap
 	{
 		mCommand = createCmd(cmd, value);
 	}
+
+
+	PJLinkSetInputCommand::PJLinkSetInputCommand(EType type, nap::uint8 number)
+	{
+		assert(number > 0 && number < 10);
+		std::string is;
+		is += static_cast<char>(type);
+		is += static_cast<char>(number + 0x30);
+		mCommand = createCmd(pjlink::cmd::set::input, is);
+	}
+
 }

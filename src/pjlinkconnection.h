@@ -27,7 +27,7 @@ namespace nap
 	}
 
 	/**
-	 * PJLink client connection instance.
+	 * PJLink client connection instance, instantiated by the PJLinkProjector.
 	 */
 	class NAPAPI PJLinkConnection : public std::enable_shared_from_this<PJLinkConnection>
 	{
@@ -38,8 +38,9 @@ namespace nap
 		/**
 		 * Creates a pjlink connection.
 		 * @param context pjlink runtime context
-		 * @param projector projector listening interface
-		 * @return pjlink connection
+		 * @param address endpoint address
+		 * @param projector interface
+		 * @return pjlink connection handle
 		 */
 		static std::shared_ptr<PJLinkConnection> create(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector);
 
@@ -50,11 +51,6 @@ namespace nap
 		// Disable move
 		PJLinkConnection& operator=(PJLinkConnection&& other) = delete;
 		PJLinkConnection(PJLinkConnection&& other) = delete;
-
-		/**
-		 * @return projector end-point
-		 */
-		const PJLinkProjector& getProjector() const		{ return mProjector; }
 
 		/**
 		 * Compare if they manage the same projector instance
