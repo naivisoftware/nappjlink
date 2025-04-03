@@ -25,6 +25,12 @@ namespace nap
 	{ }
 
 
+	std::shared_ptr<nap::PJLinkConnection> PJLinkConnection::create(pjlink::Context& context, PJLinkProjector& projector)
+	{
+		return std::make_shared<PJLinkConnection>(context, projector);
+	}
+
+
 	std::future<bool> PJLinkConnection::connect()
 	{
 		mEndpoint = mEndpoint = tcp::endpoint(address::from_string(mProjector.mIPAddress), pjlink::port);

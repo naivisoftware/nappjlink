@@ -84,7 +84,7 @@ namespace nap
 		PJLinkConnection* connect(nap::Milliseconds timeOut, utility::ErrorState& error);
 
 		std::mutex mConnectionMutex;
-		std::unique_ptr<PJLinkConnection> mConnection = nullptr;	//< Client connection
+		std::shared_ptr<PJLinkConnection> mConnection = nullptr;	//< Client connection
 		bool mConnected = false;
 	};
 }

@@ -99,14 +99,14 @@ namespace nap
 		// TODO: You 'could' return a connection that is about to be timed out -> Those requests will fail
 		// TODO: It is also possible that the handler, of that message will segfault because read buffers are destroyed
 		// TODO: Therefore we should make a copy here and wait for connection to be closed before dismissing it...
-		mConnection = std::make_unique<PJLinkConnection>(mPool->mContext, *this);
+		mConnection = PJLinkConnection::create(mPool->mContext, *this);
 		auto cf = mConnection->connect();
 
 		// Wait until established
 		if (!error.check(cf.wait_for(timeOut) == std::future_status::ready,
 			"Projector connection timed out"))
 		{
-			mConnection.reset(nullptr);
+			mConnection = nullptr;
 			return nullptr;
 		}
 
@@ -115,7 +115,7 @@ namespace nap
 		if (!error.check(rvalue, "Unable to connect to projector at '%s', port: %d",
 			mIPAddress.c_str(), pjlink::port))
 		{
-			mConnection.reset(nullptr);
+			mConnection = nullptr;
 			return nullptr;
 		}
 

@@ -29,7 +29,7 @@ namespace nap
 	/**
 	 * PJLink client connection.
 	 */
-	class NAPAPI PJLinkConnection final
+	class NAPAPI PJLinkConnection : public std::enable_shared_from_this<PJLinkConnection>
 	{
 	public:
 		// tcp connection timeout in seconds
@@ -41,6 +41,14 @@ namespace nap
 		 * @param projector end point
 		 */
 		PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector);
+
+		/**
+		 * Created shared connection.
+		 * Using a shared pointer ensures resources are kept around
+		 * @param context pjlink runtime context
+		 * @param projector projector listening interface
+		 */
+		static std::shared_ptr<PJLinkConnection> create(pjlink::Context& context, PJLinkProjector& projector);
 
 		/**
 		 * Closes connection to projector on destruction
