@@ -27,7 +27,7 @@ namespace nap
 	}
 
 	/**
-	 * PJLink client connection.
+	 * PJLink client connection instance.
 	 */
 	class NAPAPI PJLinkConnection : public std::enable_shared_from_this<PJLinkConnection>
 	{
@@ -36,17 +36,10 @@ namespace nap
 		static constexpr double sTimeout = 20.0;
 
 		/**
-		 * Constructor 
-		 * @param context network runtime context
-		 * @param projector end point
-		 */
-		PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector);
-
-		/**
-		 * Created shared connection.
-		 * Using a shared pointer ensures resources are kept around
+		 * Creates a pjlink connection.
 		 * @param context pjlink runtime context
 		 * @param projector projector listening interface
+		 * @return pjlink connection
 		 */
 		static std::shared_ptr<PJLinkConnection> create(pjlink::Context& context, PJLinkProjector& projector);
 
@@ -88,13 +81,13 @@ namespace nap
 		// Called from client thread
 		std::future<bool> connect();
 		std::future<void> disconnect();
+		void send(PJLinkCommand&& cmd);
 
 		// Called from asio execution thread
-		bool authenticate(pjlink::EndPoint ep);
-		void send(PJLinkCommand&& cmd);
-		void write(pjlink::EndPoint ep);
-		void read(pjlink::EndPoint ep, PJLinkCommand&& cmd);
-		void close(pjlink::EndPoint ep);
+		bool authenticate();
+		void write();
+		void read(PJLinkCommand&& cmd);
+		void close();
 		void timeout(const std::error_code& ec);
 
 		// A-sync objects -> accessed from socket execution context
@@ -102,6 +95,9 @@ namespace nap
 		pjlink::StreamBuf  mRespBuffer;						//< Response buffer
 		std::queue<PJLinkCommand> mCmds;					//< Commands to send
 		asio::steady_timer mTimeout;						//< Timeout connection timer
+
+		// Constructor -> private, use create()
+		PJLinkConnection(pjlink::Context& context, PJLinkProjector& projector);
 	};
 }
 
