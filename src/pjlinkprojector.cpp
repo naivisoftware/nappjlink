@@ -42,7 +42,7 @@ namespace nap
 	}
 
 
-	void PJLinkProjector::set(const std::string& cmd, const std::string& value)
+	void PJLinkProjector::send(PJLinkCommand&& cmd)
 	{
 		utility::ErrorState error;
 		auto connection = connect(nap::Seconds(5), error);
@@ -51,13 +51,7 @@ namespace nap
 			nap::Logger::warn(error.toString());
 			return;
 		}
-		mConnection->send(PJLinkCommand(cmd, value));
-	}
-
-
-	void PJLinkProjector::get(const std::string& cmd)
-	{
-		set(cmd, &pjlink::cmd::query);
+		mConnection->send(std::move(cmd));
 	}
 
 

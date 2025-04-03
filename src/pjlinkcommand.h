@@ -102,28 +102,40 @@ namespace nap
 	// Set commands
 	//////////////////////////////////////////////////////////////////////////
 
-	// Power on / off
-	class NAPAPI PJLinkSetPowerCommand : public PJLinkCommand
+	// Set cmd
+	class NAPAPI PJLinkSetCommand : public PJLinkCommand
 	{
 		RTTI_ENABLE(PJLinkCommand)
 	public:
+		PJLinkSetCommand(const std::string& body, const std::string& value) :
+			PJLinkCommand(body, value) { }
+
+	protected:
+		PJLinkSetCommand() = default;
+	};
+
+	// Power on / off
+	class NAPAPI PJLinkSetPowerCommand : public PJLinkSetCommand
+	{
+		RTTI_ENABLE(PJLinkSetCommand)
+	public:
 		PJLinkSetPowerCommand(bool value) :
-			PJLinkCommand(pjlink::cmd::set::power, value ? "1" : "0")		{ }
+			PJLinkSetCommand(pjlink::cmd::set::power, value ? "1" : "0")		{ }
 	};
 
 	// Mute (av) on / off
-	class NAPAPI PJLinkSetAVMuteCommand : public PJLinkCommand
+	class NAPAPI PJLinkSetAVMuteCommand : public PJLinkSetCommand
 	{
-		RTTI_ENABLE(PJLinkCommand)
+		RTTI_ENABLE(PJLinkSetCommand)
 	public:
 		PJLinkSetAVMuteCommand(bool value) :
-			PJLinkCommand(pjlink::cmd::set::avmute, value ? "31" : "30")	{ }
+			PJLinkSetCommand(pjlink::cmd::set::avmute, value ? "31" : "30")	{ }
 	};
 
 	// Input selection
-	class NAPAPI PJLinkSetInputCommand : public PJLinkCommand
+	class NAPAPI PJLinkSetInputCommand : public PJLinkSetCommand
 	{
-		RTTI_ENABLE(PJLinkCommand)
+		RTTI_ENABLE(PJLinkSetCommand)
 	public:
 		// Available input types
 		enum class EType : char
@@ -147,39 +159,48 @@ namespace nap
 	// Get commands
 	//////////////////////////////////////////////////////////////////////////
 
-	// Get power status
-	class NAPAPI PJLinkGetPowerCommand : public PJLinkCommand
+	// Set cmd
+	class NAPAPI PJLinkGetCommand : public PJLinkCommand
 	{
 		RTTI_ENABLE(PJLinkCommand)
 	public:
+		PJLinkGetCommand(const std::string& body) :
+			PJLinkCommand(body, &pjlink::cmd::query) { }
+	};
+
+	// Get power status
+	class NAPAPI PJLinkGetPowerCommand : public PJLinkGetCommand
+	{
+		RTTI_ENABLE(PJLinkGetCommand)
+	public:
 		PJLinkGetPowerCommand() :
-			PJLinkCommand(pjlink::cmd::get::power, &pjlink::cmd::query)		{ }
+			PJLinkGetCommand(pjlink::cmd::get::power)		{ }
 	};
 
 	// Get mute status
-	class NAPAPI PJLinkGetAVMuteCommand : public PJLinkCommand
+	class NAPAPI PJLinkGetAVMuteCommand : public PJLinkGetCommand
 	{
-		RTTI_ENABLE(PJLinkCommand)
+		RTTI_ENABLE(PJLinkGetCommand)
 	public:
 		PJLinkGetAVMuteCommand() :
-			PJLinkCommand(pjlink::cmd::get::avmute, &pjlink::cmd::query)	{ }
+			PJLinkGetCommand(pjlink::cmd::get::avmute)	{ }
 	};
 
 	// Get lamp status
-	class NAPAPI PJLinkGetLampStatusCommand : public PJLinkCommand
+	class NAPAPI PJLinkGetLampStatusCommand : public PJLinkGetCommand
 	{
-		RTTI_ENABLE(PJLinkCommand)
+		RTTI_ENABLE(PJLinkGetCommand)
 	public:
 		PJLinkGetLampStatusCommand() :
-			PJLinkCommand(pjlink::cmd::get::hours, &pjlink::cmd::query)		{ }
+			PJLinkGetCommand(pjlink::cmd::get::hours)		{ }
 	};
 
 	// Get error status
-	class NAPAPI PJLinkGetErrorStatusCommand : public PJLinkCommand
+	class NAPAPI PJLinkGetErrorStatusCommand : public PJLinkGetCommand
 	{
-		RTTI_ENABLE(PJLinkCommand)
+		RTTI_ENABLE(PJLinkGetCommand)
 	public:
 		PJLinkGetErrorStatusCommand() :
-			PJLinkCommand(pjlink::cmd::get::error, &pjlink::cmd::query)		{ }
+			PJLinkGetCommand(pjlink::cmd::get::error)		{ }
 	};
 }

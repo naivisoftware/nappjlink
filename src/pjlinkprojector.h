@@ -39,37 +39,31 @@ namespace nap
 		/**
 		 * Turns the projector on
 		 */
-		void powerOn()													{ set(pjlink::cmd::set::power, "1"); }
+		void powerOn()													{ send(PJLinkSetPowerCommand(true)); }
 
 		/**
 		 * Turns the projector off
 		 */
-		void powerOff()													{ set(pjlink::cmd::set::power, "0"); }
+		void powerOff()													{ send(PJLinkSetPowerCommand(false)); }
 
 		/**
 		 * Mute projector audio and video output.
 		 * @param value if audio and video output should be muted
 		 */
-		void muteOn()													{ set(pjlink::cmd::set::avmute, "31"); }
+		void muteOn()													{ send(PJLinkSetAVMuteCommand(true)); }
 
 		/**
 		 * Don't mute projector audio and video output.
 		 * @param value if audio and video output should be muted
 		 */
-		void muteOff()													{ set(pjlink::cmd::set::avmute, "30"); }
+		void muteOff()													{ send(PJLinkSetAVMuteCommand(false)); }
 
 		/**
-		 * Sends a control command to the projector a-sync.
-		 * @param cmd pjlink set command
-		 * @param value pjlink parameter
+		 * Sends a get or set command to the projector a-sync.
+		 * This function returns immediately, the command is queued.
+		 * @param cmd control command to send
 		 */
-		void set(const std::string& cmd, const std::string& value);
-
-		/**
-		 * Sends a get command to the projector a-sync.
-		 * @param cmd pjlink get command name
-		 */
-		void get(const std::string& cmd);
+		void send(PJLinkCommand&& cmd);
 
 		bool mConnect = false;									//< Property: 'ConnectOnStartup' Connect to projector on startup, startup will fail if connection can't be established
 		std::string mIPAddress = "192.168.0.1";					//< Property: 'IP Address' ip address of the projector on the network
