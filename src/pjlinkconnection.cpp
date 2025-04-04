@@ -62,7 +62,7 @@ namespace nap
 				}
 
 				// Connection success -> verify authentification
-				nap::Logger::info("%s: Connected, port: %d",
+				nap::Logger::debug("%s: Connected, port: %d",
 					handle->mAddress.to_string().c_str(),
 					handle->mEndpoint.port());
 
@@ -112,7 +112,7 @@ namespace nap
 		}
 
 		// Commit to string
-		nap::Logger::info("%s: Received %d authorization bytes", mAddress.to_string().c_str(), size);
+		nap::Logger::debug("%s: Received %d authorization bytes", mAddress.to_string().c_str(), size);
 		std::istream is(&mAuthBuffer); std::string response;
 		std::getline(std::istream(&mAuthBuffer), response, pjlink::terminator);
 
@@ -138,7 +138,7 @@ namespace nap
 		}
 
 		// All good
-		nap::Logger::info("%s: Authentication succeeded",
+		nap::Logger::debug("%s: Authentication succeeded",
 			mAddress.to_string().c_str());
 
 		mReady = true;
@@ -184,7 +184,7 @@ namespace nap
 				}
 
 				// Writing succeeded -> schedule a response read before attempting a new write
-				nap::Logger::info("%s: Written %d byte(s)", handle->mAddress.to_string().c_str(), size);
+				nap::Logger::debug("%s: Written %d byte(s)", handle->mAddress.to_string().c_str(), size);
 			});
 	}
 
@@ -209,7 +209,7 @@ namespace nap
 				}
 
 				// Read succeeded
-				nap::Logger::info("%s: Read %d byte(s)", handle->mAddress.to_string().c_str(), size);
+				nap::Logger::debug("%s: Read %d byte(s)", handle->mAddress.to_string().c_str(), size);
 
 				// Commit response from buffer input to response
 				assert(!handle->mCmds.empty());
@@ -219,7 +219,7 @@ namespace nap
 				std::getline(std::istream(&handle->mRespBuffer), reply.mResponse, pjlink::terminator);
 
 				// All good
-				nap::Logger::info("%s: Reply '%s', cmd: '%s'",
+				nap::Logger::debug("%s: Reply '%s', cmd: '%s'",
 					handle->mAddress.to_string().c_str(),
 					reply.mResponse.substr(0, reply.mResponse.size()-1).c_str(),
 					reply.mCommand.substr(0, reply.mCommand.size()-1).c_str());
@@ -259,7 +259,7 @@ namespace nap
 		}
 
 		// Cancel outstanding timing operations
-		nap::Logger::info("%s: Connection closed", mAddress.to_string().c_str());
+		nap::Logger::debug("%s: Connection closed", mAddress.to_string().c_str());
 
 		// Notify listeners
 		mProjector.connectionClosed();
@@ -270,7 +270,7 @@ namespace nap
 	{
 		if (!ec)
 		{
-			nap::Logger::info("%s: Connection timed out", mAddress.to_string().c_str());
+			nap::Logger::debug("%s: Connection timed out", mAddress.to_string().c_str());
 			assert(mSocket.is_open());
 			close();
 		}

@@ -31,8 +31,7 @@ namespace nap
 
 	void PJLinkComponentInstance::onResponse(const PJLinkCommand& cmd)
 	{
-		auto clone = cmd.clone();
-		assert(clone != nullptr);
+		auto clone = cmd.clone(); assert(clone != nullptr);
 		std::lock_guard<std::mutex> lock(mMutex);
 		mrQueue.emplace(std::move(clone));
 	}
