@@ -78,3 +78,7 @@ All communication is a-synchronous: all calls to `PJLinkProjector::send()` will 
 
 You must assign a `nap::PJLinkProjectorPool` to every projector. The pool runs all queued I/O network requests a-synchronous on it's assigned worker thread. 1 pool per application is enough, unless you are controlling a very large (100+) number of projectors.
 
+## Authentication
+
+Authentication is *not* supported at the moment. You must **turn off authentication** in your projector. The authentication request will cause the connection to fail, in that case an error message is reported.
+
