@@ -8,6 +8,47 @@
 // External includes
 #include <assert.h>
 
+// Base class
+RTTI_BEGIN_CLASS(nap::PJLinkCommand)
+	RTTI_CONSTRUCTOR(const std::string&, const std::string&)
+	RTTI_PROPERTY("Command",	&nap::PJLinkCommand::mCommand,		nap::rtti::EPropertyMetaData::Default)
+	RTTI_PROPERTY("Response",	&nap::PJLinkCommand::mResponse,		nap::rtti::EPropertyMetaData::Default)
+RTTI_END_CLASS
+
+// Set commands
+RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::PJLinkSetCommand)
+RTTI_END_CLASS
+
+RTTI_BEGIN_CLASS(nap::PJLinkSetPowerCommand)
+	RTTI_CONSTRUCTOR(bool)
+RTTI_END_CLASS
+
+RTTI_BEGIN_CLASS(nap::PJLinkSetAVMuteCommand)
+	RTTI_CONSTRUCTOR(bool)
+RTTI_END_CLASS
+
+RTTI_BEGIN_CLASS(nap::PJLinkSetInputCommand)
+	RTTI_CONSTRUCTOR(nap::PJLinkSetInputCommand::EType, nap::uint8)
+RTTI_END_CLASS
+
+// Get commands
+RTTI_BEGIN_CLASS_NO_DEFAULT_CONSTRUCTOR(nap::PJLinkGetCommand)
+RTTI_END_CLASS
+
+RTTI_DEFINE_CLASS(nap::PJLinkGetPowerCommand)
+RTTI_DEFINE_CLASS(nap::PJLinkGetAVMuteCommand)
+RTTI_DEFINE_CLASS(nap::PJLinkGetLampStatusCommand)
+RTTI_DEFINE_CLASS(nap::PJLinkGetErrorStatusCommand)
+
+RTTI_BEGIN_ENUM(nap::PJLinkSetInputCommand::EType)
+	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::RGB,			"RGB"),
+	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::Video,		"Video"),
+	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::Digital,		"Video"),
+	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::Storage,		"Storage"),
+	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::Network,		"Network")
+RTTI_END_ENUM
+
+
 namespace nap
 {
 	static std::string createCmd(const std::string& cmd, const std::string& value)
@@ -30,6 +71,13 @@ namespace nap
 	PJLinkCommand::PJLinkCommand(const std::string& cmd, const std::string& value)
 	{
 		mCommand = createCmd(cmd, value);
+	}
+
+
+	nap::PJLinkCommandPtr PJLinkCommand::clone() const
+	{
+		rtti::Factory factory;
+		return rtti::cloneObject(*this, factory);
 	}
 
 

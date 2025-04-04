@@ -58,14 +58,17 @@ namespace nap
 	// Commands
 	//////////////////////////////////////////////////////////////////////////
 
+	class PJLinkCommand;
+	using PJLinkCommandPtr = std::unique_ptr<PJLinkCommand>;
+
 	/**
 	 * Standard text based PJLink command including response.
 	 * Use this for custom pjlink commands without specialization.
 	 * Can be copied and moved.
 	 */
-	class NAPAPI PJLinkCommand 
+	class NAPAPI PJLinkCommand : public rtti::Object
 	{
-		RTTI_ENABLE()
+		RTTI_ENABLE(rtti::Object)
 	public:
 		// Construct cmd from body and value
 		PJLinkCommand(const std::string& body, const std::string& value);
@@ -90,14 +93,19 @@ namespace nap
 		 */
 		const std::string& getResponse()		{ return mResponse; }
 
+		/**
+		 * Clones the command
+		 */
+		PJLinkCommandPtr clone() const;
+
 		std::string mCommand;					//< Full PJLink command message
 		std::string mResponse;					//< Full PJLink command response
 
 	protected:
+
+		// Default (invalid) cmd
 		PJLinkCommand() = default;
 	};
-
-	using PJLinkCommandPtr = std::unique_ptr<PJLinkCommand>;
 
 
 	//////////////////////////////////////////////////////////////////////////
@@ -112,7 +120,6 @@ namespace nap
 		PJLinkSetCommand(const std::string& body, const std::string& value) :
 			PJLinkCommand(body, value) { }
 
-	protected:
 		PJLinkSetCommand() = default;
 	};
 
@@ -123,6 +130,8 @@ namespace nap
 	public:
 		PJLinkSetPowerCommand(bool value) :
 			PJLinkSetCommand(pjlink::cmd::set::power, value ? "1" : "0")		{ }
+
+		PJLinkSetPowerCommand() = default;
 	};
 
 	// Mute (av) on / off
@@ -132,6 +141,8 @@ namespace nap
 	public:
 		PJLinkSetAVMuteCommand(bool value) :
 			PJLinkSetCommand(pjlink::cmd::set::avmute, value ? "31" : "30")		{ }
+
+		PJLinkSetAVMuteCommand() = default;
 	};
 
 	// Input selection
@@ -139,6 +150,9 @@ namespace nap
 	{
 		RTTI_ENABLE(PJLinkSetCommand)
 	public:
+		// Default constructor
+		PJLinkSetInputCommand() = default;
+
 		// Available input types
 		enum class EType : char
 		{

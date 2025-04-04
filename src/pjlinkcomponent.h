@@ -51,8 +51,8 @@ namespace nap
 
 		void onResponse(const PJLinkCommand&);
 		nap::Slot<const PJLinkCommand&> mResponseSlot = { this, &PJLinkComponentInstance::onResponse };
-		std::queue<PJLinkCommand> mrQueue;
-		std::queue<PJLinkCommand> mcQueue;
+		std::queue<PJLinkCommandPtr> mrQueue;
+		std::queue<PJLinkCommandPtr> mcQueue;
 		std::mutex mMutex;
 	};
 }
