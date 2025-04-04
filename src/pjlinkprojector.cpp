@@ -89,7 +89,9 @@ namespace nap
 
 		// Wait until established, including authorization
 		// TODO: Give option not to block and continue execution
-		auto cf = client->connect();
+		client->connect();
+
+		/*
 		if (!error.check(cf.wait_for(timeOut) == std::future_status::ready,
 			"Projector connection timed out"))
 			return nullptr;
@@ -99,6 +101,7 @@ namespace nap
 		if (!error.check(rvalue, "Unable to connect to projector at '%s', port: %d",
 			mIPAddress.c_str(), pjlink::port))
 			return nullptr;
+		*/
 
 		// Store for future reference
 		{

@@ -53,6 +53,11 @@ namespace nap
 		PJLinkConnection(PJLinkConnection&& other) = delete;
 
 		/**
+		 * @return if client connection is established and active
+		 */
+		bool connected()								{ return mConnected; }
+
+		/**
 		 * Compare if they manage the same projector instance
 		 */
 		bool operator == (const PJLinkProjector& c)		{ return &c == &mProjector; }
@@ -88,6 +93,7 @@ namespace nap
 		pjlink::StreamBuf  mRespBuffer;						//< Response buffer
 		std::queue<PJLinkCommand> mCmds;					//< Commands to send
 		std::unique_ptr<asio::steady_timer> mTimeout;		//< Timeout connection timer
+		std::atomic<bool> mConnected = { false };			//< If io connection is active
 
 		// Constructor -> private, use create()
 		PJLinkConnection(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector);

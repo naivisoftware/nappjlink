@@ -61,6 +61,12 @@ namespace nap
 				{
 					// Start running timeout timer
 					handle->setTimer();
+					handle->mConnected = true;
+
+					// If there are messages, start processing
+					if (!handle->mCmds.empty())
+						handle->write();
+
 					return true;
 				}
 				return false;
@@ -143,7 +149,7 @@ namespace nap
 			{
 				bool writing = !handle->mCmds.empty();
 				handle->mCmds.emplace(std::move(cmd));
-				if (!writing)
+				if (!writing && handle->mConnected)
 					handle->write();
 			}
 		);
@@ -155,9 +161,6 @@ namespace nap
 		assert(!mCmds.empty()); 
 		auto& cmd_ref = mCmds.front();
 		auto write_buffer = asio::buffer(cmd_ref.data(), cmd_ref.size());
-
-		nap::Logger::info("%s: Writing '%s'", mAddress.to_string().c_str(),
-			cmd_ref.getCommand().substr(0, cmd_ref.size() - 1).c_str());
 
 		assert(mSocket.is_open());
 		auto handle = shared_from_this();
@@ -227,7 +230,10 @@ namespace nap
 		mTimeout.reset(nullptr);
 
 		// Close -> must be open when called deferred
-		assert(mSocket.is_open()); std::error_code ec;
+		if (!mSocket.is_open())
+			return;
+
+		std::error_code ec;
 		mSocket.close(ec);
 		if (ec)
 		{
