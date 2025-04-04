@@ -52,7 +52,7 @@ namespace nap
 	}
 
 
-	void PJLinkProjector::send(PJLinkCommand&& cmd)
+	void PJLinkProjector::send(PJLinkCommandPtr cmd)
 	{
 		utility::ErrorState error;
 		auto client = getConnection(error);
@@ -73,7 +73,7 @@ namespace nap
 	}
 
 
-	void PJLinkProjector::response(PJLinkCommand&& message)
+	void PJLinkProjector::response(const PJLinkCommand& message)
 	{
 		// Notify listeners
 		ResponseReceived(message);

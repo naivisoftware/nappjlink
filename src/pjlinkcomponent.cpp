@@ -29,6 +29,13 @@ namespace nap
 	}
 
 
+	void PJLinkComponentInstance::onResponse(const PJLinkCommand& cmd)
+	{
+		std::lock_guard<std::mutex> lock(mMutex);
+		mrQueue.emplace(cmd);
+	}
+
+
 	void PJLinkComponentInstance::update(double deltaTime)
 	{
 		// Swap messages thread-safe
@@ -44,12 +51,5 @@ namespace nap
 			const auto& msg = mcQueue.front();
 			mcQueue.pop();
 		}
-	}
-
-
-	void PJLinkComponentInstance::onResponse(const PJLinkCommand& cmd)
-	{
-		std::lock_guard<std::mutex> lock(mMutex);
-		mrQueue.emplace(cmd);
 	}
 }

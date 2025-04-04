@@ -74,7 +74,7 @@ namespace nap
 				// Write enqueued cmd
 				handle->setTimer();
 				if (!handle->mCmds.empty())
-					handle->write(handle->mCmds.front());
+					handle->write(*(handle->mCmds.front()));
 
 				// Start reading callback
 				handle->read();
@@ -152,11 +152,11 @@ namespace nap
 	}
 
 
-	void PJLinkConnection::enqueue(PJLinkCommand&& command)
+	void PJLinkConnection::enqueue(PJLinkCommandPtr command)
 	{
 		// Submit task for execution -> it is queued and called from the socket execution thread
 		auto handle = shared_from_this();
-		asio::post(mSocket.get_executor(), [handle, cmd = std::move(command)]
+		asio::post(mSocket.get_executor(), [handle, cmd = std::move(command)]() mutable
 			{
 				// We only write if the queue is empty -> when all cmds have been processed.
 				// PJLink requires cmds to be sent in order, one by one, after a valid response.
@@ -165,7 +165,7 @@ namespace nap
 				handle->mCmds.emplace(std::move(cmd));
 				if (handle->mReady && queue_empty)
 				{
-					handle->write(handle->mCmds.front());
+					handle->write(*(handle->mCmds.front()));
 				}
 			}
 		);
@@ -219,7 +219,8 @@ namespace nap
 
 				// Commit response from buffer input to response
 				assert(!handle->mCmds.empty());
-				PJLinkCommand reply(handle->mCmds.front());
+				auto& reply = *handle->mCmds.front();
+
 				std::istream is(&handle->mRespBuffer);
 				std::getline(std::istream(&handle->mRespBuffer), reply.mResponse, pjlink::terminator);
 
@@ -230,16 +231,14 @@ namespace nap
 					reply.mCommand.substr(0, reply.mCommand.size()-1).c_str());
 
 				// Forward response and set timer
-				handle->mProjector.response(std::move(reply));
+				handle->mProjector.response(reply);
 				handle->setTimer();
 
 				// After receiving a response, we're ready to send a subsequent request
 				// PJLink requires the response to be sent before attempting a new write..
 				handle->mCmds.pop();
-
-
 				if (!handle->mCmds.empty())
-					handle->write(handle->mCmds.front());
+					handle->write(*(handle->mCmds.front()));
 
 				// Keep reading until there's a new response
 				handle->read();

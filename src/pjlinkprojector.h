@@ -28,45 +28,44 @@ namespace nap
 		/**
 		 * Turns the projector on
 		 */
-		void powerOn()													{ send(PJLinkSetPowerCommand(true)); }
+		void powerOn()													{ send<PJLinkSetPowerCommand>(true); }
 
 		/**
 		 * Turns the projector off
 		 */
-		void powerOff()													{ send(PJLinkSetPowerCommand(false)); }
+		void powerOff()													{ send<PJLinkSetPowerCommand>(false); }
 
 		/**
 		 * Mute projector audio and video output.
 		 * @param value if audio and video output should be muted
 		 */
-		void muteOn()													{ send(PJLinkSetAVMuteCommand(true)); }
+		void muteOn()													{ send<PJLinkSetAVMuteCommand>(true); }
 
 		/**
 		 * Don't mute projector audio and video output.
 		 * @param value if audio and video output should be muted
 		 */
-		void muteOff()													{ send(PJLinkSetAVMuteCommand(false)); }
-
-		/**
-		 * Sends a set (control) command to the projector a-sync.
-		 * This function returns immediately, the command is queued.
-		 * @param cmd control command to send
-		 */
-		void set(PJLinkSetCommand&& cmd)								{ send(std::move(cmd)); }
-
-		/**
-		 * Sends a get (query) command to the projector a-sync.
-		 * This function returns immediately, the command is queued.
-		 * @param cmd query command to send
-		 */
-		void get(PJLinkGetCommand&& cmd)								{ send(std::move(cmd)); }
+		void muteOff()													{ send<PJLinkSetAVMuteCommand>(false); }
 
 		/**
 		 * Sends a PJLink command to the projector a-sync.
 		 * This function returns immediately, the command is queued.
 		 * @param cmd command to send
 		 */
-		void send(PJLinkCommand&& cmd);
+		void send(PJLinkCommandPtr cmd);
+
+		/**
+		 * Sends a PJLink command of type CMD to the projector a-sync
+		 * This function returns immediately, the command is queued.
+		 * 
+		 * ~~~~~{.cpp}
+		 * projector->send<PJLinkSetPowerCommand>(true)
+		 * ~~~~~
+		 * 
+		 * @param args optional PJLink command arguments
+		 */
+		template<typename CMD, typename ... Args>
+		void send(Args&& ... args)										{ send(std::make_unique<CMD>(std::forward<Args>(args)...)); }
 
 		/**
 		 * Creates and sends a PJLink command to the projector a-sync.
@@ -74,7 +73,7 @@ namespace nap
 		 * @param body pjlink command body (see spec)
 		 * @param value pjlink value (see spec)
 		 */
-		void send(const char* body, const char* value)					{ send(PJLinkCommand(body, value)); }
+		void send(const char* body, const char* value)					{ send(std::make_unique<PJLinkCommand>(body, value)); }
 
 		/**
 		 * Connects the projector if connect on startup is true.
@@ -103,7 +102,7 @@ namespace nap
 		void connectionClosed();
 
 		// Called by the PJLink client when it receives a message from the projector
-		void response(PJLinkCommand&& message);
+		void response(const PJLinkCommand& message);
 
 		// Creates a connection
 		std::shared_ptr<PJLinkConnection> create(utility::ErrorState & error);

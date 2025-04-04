@@ -81,7 +81,7 @@ namespace nap
 		// Called from client thread
 		std::future<bool> connect();
 		std::future<void> disconnect();
-		void enqueue(PJLinkCommand&& cmd);
+		void enqueue(PJLinkCommandPtr cmd);
 
 		// Called from asio execution thread
 		bool authenticate();
@@ -94,7 +94,7 @@ namespace nap
 		// A-sync objects -> accessed from socket execution context
 		pjlink::StreamBuf mAuthBuffer;					//< Authentification buffer
 		pjlink::StreamBuf  mRespBuffer;					//< Response buffer
-		std::queue<PJLinkCommand> mCmds;				//< Commands to send
+		std::queue<PJLinkCommandPtr> mCmds;				//< Commands to send
 		std::unique_ptr<asio::steady_timer> mTimeout;	//< Timeout connection timer
 		std::atomic<bool> mReady = { false };			//< If io connection is active
 
