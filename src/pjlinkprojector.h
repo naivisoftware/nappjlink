@@ -94,7 +94,7 @@ namespace nap
 		nap::ResourcePtr<PJLinkProjectorPool> mPool;			//< Property: 'Pool' Interface that manages the connection
 
 		// Signal called when receiving a pj link response
-		nap::Signal<const PJLinkCommand&> ResponseReceived;			
+		nap::Signal<const PJLinkCommand&> ResponseReceived;
 
 	private:
 		friend class PJLinkConnection;
@@ -105,11 +105,11 @@ namespace nap
 		// Called by the PJLink client when it receives a message from the projector
 		void response(PJLinkCommand&& message);
 
-		// Establishes a connection
-		std::shared_ptr<PJLinkConnection> connect(nap::Milliseconds timeOut, utility::ErrorState& error);
+		// Creates a connection
+		std::shared_ptr<PJLinkConnection> create(utility::ErrorState & error);
 
 		// Get current connection handle
-		std::shared_ptr<PJLinkConnection> getConnection();
+		std::shared_ptr<PJLinkConnection> getConnection(utility::ErrorState& error);
 
 		std::mutex mConnectionMutex;
 		std::shared_ptr<PJLinkConnection> mConnection = nullptr;	//< Client connection

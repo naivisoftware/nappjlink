@@ -67,6 +67,9 @@ namespace nap
 		 */
 		bool operator != (const PJLinkProjector& c)		{ return &c != &mProjector; }
 
+		// Future connection -> available after establishing connection successful authorization
+		using Future = std::future<std::shared_ptr<PJLinkConnection>>;
+
 	private:
 		friend class PJLinkProjector;
 
@@ -89,10 +92,10 @@ namespace nap
 		void setTimer();
 
 		// A-sync objects -> accessed from socket execution context
-		pjlink::StreamBuf mAuthBuffer;						//< Authentification buffer
-		pjlink::StreamBuf  mRespBuffer;						//< Response buffer
-		std::queue<PJLinkCommand> mCmds;					//< Commands to send
-		std::unique_ptr<asio::steady_timer> mTimeout;		//< Timeout connection timer
+		pjlink::StreamBuf mAuthBuffer;					//< Authentification buffer
+		pjlink::StreamBuf  mRespBuffer;					//< Response buffer
+		std::queue<PJLinkCommand> mCmds;				//< Commands to send
+		std::unique_ptr<asio::steady_timer> mTimeout;	//< Timeout connection timer
 		std::atomic<bool> mReady = { false };			//< If io connection is active
 
 		// Constructor -> private, use create()

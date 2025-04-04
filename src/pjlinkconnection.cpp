@@ -75,7 +75,9 @@ namespace nap
 
 				// Start reading callback
 				handle->read();
-				return true;
+
+				// Return reference to self as future
+				return false;
 			}));
 		return cf;
 	}
