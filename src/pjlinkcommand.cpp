@@ -42,4 +42,13 @@ namespace nap
 		mCommand = createCmd(pjlink::cmd::set::input, is);
 	}
 
+
+	nap::PJLinkGetPowerCommand::EStatus PJLinkGetPowerCommand::getPowerStatus() const
+	{
+		if (mResponse.empty())
+			return EStatus::Invalid;
+
+		return EStatus::Cooling;
+	}
+
 }

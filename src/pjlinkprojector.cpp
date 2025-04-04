@@ -100,10 +100,10 @@ namespace nap
 		if (mConnection == nullptr)
 		{
 			mConnection = create(error);
-			if (mConnection == nullptr)
-				return  nullptr;
-
-			mConnection->connect();
+			if (mConnection != nullptr)
+			{
+				mConnection->connect();
+			}
 		}
 		return mConnection;
 	}

@@ -97,6 +97,8 @@ namespace nap
 		PJLinkCommand() = default;
 	};
 
+	using PJLinkCommandPtr = std::unique_ptr<PJLinkCommand>;
+
 
 	//////////////////////////////////////////////////////////////////////////
 	// Set commands
@@ -129,7 +131,7 @@ namespace nap
 		RTTI_ENABLE(PJLinkSetCommand)
 	public:
 		PJLinkSetAVMuteCommand(bool value) :
-			PJLinkSetCommand(pjlink::cmd::set::avmute, value ? "31" : "30")	{ }
+			PJLinkSetCommand(pjlink::cmd::set::avmute, value ? "31" : "30")		{ }
 	};
 
 	// Input selection
@@ -165,7 +167,7 @@ namespace nap
 		RTTI_ENABLE(PJLinkCommand)
 	public:
 		PJLinkGetCommand(const std::string& body) :
-			PJLinkCommand(body, &pjlink::cmd::query) { }
+			PJLinkCommand(body, &pjlink::cmd::query)	{ }
 	};
 
 	// Get power status
@@ -173,8 +175,24 @@ namespace nap
 	{
 		RTTI_ENABLE(PJLinkGetCommand)
 	public:
+		enum class EStatus : char
+		{
+			Off				= '0',		//< Projector is off
+			On				= '1',		//< Projector is on
+			Cooling			= '2',		//< Projector is cooling down
+			WarmingUp		= '3',		//< Projector is warming up
+			Unavailable		= '4',		//< Projector is unavailable
+			Error			= '5',		//< Projector power error
+			Invalid			= 0x00		//< Response not available
+		};
+
 		PJLinkGetPowerCommand() :
 			PJLinkGetCommand(pjlink::cmd::get::power)		{ }
+
+		/**
+		 * @return power status
+		 */
+		EStatus getPowerStatus() const;
 	};
 
 	// Get mute status
@@ -183,7 +201,7 @@ namespace nap
 		RTTI_ENABLE(PJLinkGetCommand)
 	public:
 		PJLinkGetAVMuteCommand() :
-			PJLinkGetCommand(pjlink::cmd::get::avmute)	{ }
+			PJLinkGetCommand(pjlink::cmd::get::avmute)		{ }
 	};
 
 	// Get lamp status
