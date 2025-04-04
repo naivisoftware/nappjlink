@@ -35,9 +35,9 @@ clone https://github.com/naivisoftware/nappjlink.git
 
 In Napkin:
 
-- Add a (1) `nap::PJLinkProjectorPool` resource
-- Add a (2) `nap::PJLinkProjector` resource
-	- Assign the pool (1) to the projector (2)
+1. add a `nap::PJLinkProjectorPool` resource
+2. add a `nap::PJLinkProjector` resource
+3. assign the pool (1) to the projector (2)
 
 In your application:
 
@@ -50,11 +50,11 @@ projector->powerOn()
 
 In Napkin:
 
-- Add a (3) `nap::PJLinkComponent` to an entity
+1. add a `nap::PJLinkComponent` to an entity
 
 In Code:
 
-Listen to the `nap::PJLinkComponent::messageReceived` signal to receive responses
+Listen to the `nap::PJLinkComponent::messageReceived` signal to receive responses:
 
 ```
 #include <pjlinkcomponent.h>
