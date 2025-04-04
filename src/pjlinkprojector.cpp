@@ -52,7 +52,7 @@ namespace nap
 			nap::Logger::warn(error.toString());
 			return;
 		}
-		mConnection->send(std::move(cmd));
+		mConnection->enqueue(std::move(cmd));
 	}
 
 

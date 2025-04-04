@@ -55,7 +55,7 @@ namespace nap
 		/**
 		 * @return if client connection is established and active
 		 */
-		bool connected()								{ return mConnected; }
+		bool connected()								{ return mReady; }
 
 		/**
 		 * Compare if they manage the same projector instance
@@ -78,12 +78,12 @@ namespace nap
 		// Called from client thread
 		std::future<bool> connect();
 		std::future<void> disconnect();
-		void send(PJLinkCommand&& cmd);
+		void enqueue(PJLinkCommand&& cmd);
 
 		// Called from asio execution thread
 		bool authenticate();
-		void write();
-		void read(PJLinkCommand&& cmd);
+		void write(PJLinkCommand& cmd);
+		void read();
 		void close();
 		void timeout(const std::error_code& ec);
 		void setTimer();
@@ -93,7 +93,7 @@ namespace nap
 		pjlink::StreamBuf  mRespBuffer;						//< Response buffer
 		std::queue<PJLinkCommand> mCmds;					//< Commands to send
 		std::unique_ptr<asio::steady_timer> mTimeout;		//< Timeout connection timer
-		std::atomic<bool> mConnected = { false };			//< If io connection is active
+		std::atomic<bool> mReady = { false };			//< If io connection is active
 
 		// Constructor -> private, use create()
 		PJLinkConnection(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector);

@@ -16,6 +16,14 @@
 #include <asio/use_future.hpp>
 #include <asio/defer.hpp>
 
+// Windows abort error code
+#ifdef WIN32 
+	constexpr int abortec = 1236;
+#else
+	constexpr int ec = 0;
+#endif
+
+
 using namespace asio::ip;
 
 namespace nap
@@ -56,20 +64,18 @@ namespace nap
 					handle->mAddress.to_string().c_str(),
 					handle->mEndpoint.port());
 
-				// Authenticate
-				if (handle->authenticate())
-				{
-					// Start running timeout timer
-					handle->setTimer();
-					handle->mConnected = true;
+				// Authentication failed
+				if (!handle->authenticate())
+					return false;
 
-					// If there are messages, start processing
-					if (!handle->mCmds.empty())
-						handle->write();
+				// Write enqueued cmd
+				handle->setTimer();
+				if (!handle->mCmds.empty())
+					handle->write(handle->mCmds.front());
 
-					return true;
-				}
-				return false;
+				// Start reading callback
+				handle->read();
+				return true;
 			}));
 		return cf;
 	}
@@ -136,33 +142,35 @@ namespace nap
 		nap::Logger::info("%s: Authentication succeeded",
 			mAddress.to_string().c_str());
 
-		// Start connection timer
+		mReady = true;
 		return true;
 	}
 
 
-	void PJLinkConnection::send(PJLinkCommand&& command)
+	void PJLinkConnection::enqueue(PJLinkCommand&& command)
 	{
 		// Submit task for execution -> it is queued and called from the socket execution thread
 		auto handle = shared_from_this();
 		asio::post(mSocket.get_executor(), [handle, cmd = std::move(command)]
 			{
-				bool writing = !handle->mCmds.empty();
+				// We only write if the queue is empty -> when all cmds have been processed.
+				// PJLink requires cmds to be sent in order, one by one, after a valid response.
+				// The recursive read callback handles further cmd processing, after a response.
+				bool queue_empty = handle->mCmds.empty();
 				handle->mCmds.emplace(std::move(cmd));
-				if (!writing && handle->mConnected)
-					handle->write();
+				if (handle->mReady && queue_empty)
+				{
+					handle->write(handle->mCmds.front());
+				}
 			}
 		);
 	}
 
 
-	void PJLinkConnection::write()
+	void PJLinkConnection::write(PJLinkCommand& cmd)
 	{
-		assert(!mCmds.empty()); 
-		auto& cmd_ref = mCmds.front();
-		auto write_buffer = asio::buffer(cmd_ref.data(), cmd_ref.size());
-
-		assert(mSocket.is_open());
+		assert(mSocket.is_open() && mReady);
+		auto write_buffer = asio::buffer(cmd.data(), cmd.size());
 		auto handle = shared_from_this();
 		asio::async_write(mSocket, write_buffer, [handle](std::error_code ec, std::size_t size)
 			{
@@ -178,27 +186,25 @@ namespace nap
 
 				// Writing succeeded -> schedule a response read before attempting a new write
 				nap::Logger::info("%s: Written %d byte(s)", handle->mAddress.to_string().c_str(), size);
-				auto current = handle->mCmds.front(); handle->mCmds.pop();
-				handle->read(std::move(current));
-
-				// Continue if there are more commands
-				if (!handle->mCmds.empty())
-					handle->write();
 			});
 	}
 
 
-	void PJLinkConnection::read(PJLinkCommand&& source_cmd)
+	void PJLinkConnection::read()
 	{
 		assert(mSocket.is_open());
 		auto handle = shared_from_this();
-		asio::async_read_until(mSocket, mRespBuffer, pjlink::terminator, [handle, src = std::move(source_cmd)] (std::error_code ec, std::size_t size)
+		asio::async_read_until(mSocket, mRespBuffer, pjlink::terminator, [handle] (std::error_code ec, std::size_t size)
 			{
 				if (ec)
 				{
-					nap::Logger::error("Reading failed (ec '%d'), projector endpoint : %s",
-						ec.value(), handle->mAddress.to_string().c_str());
-
+					if (ec.value() != abortec)
+					{
+						nap::Logger::error("Reading failed (ec '%d'), projector endpoint: %s,\nmsg: %s",
+							ec.value(),
+							handle->mAddress.to_string().c_str(),
+							ec.message().c_str());
+					}
 					handle->close();
 					return;
 				}
@@ -206,8 +212,9 @@ namespace nap
 				// Read succeeded
 				nap::Logger::info("%s: Read %d byte(s)", handle->mAddress.to_string().c_str(), size);
 
-				// Commit response from buffer input to response 
-				PJLinkCommand reply(src);
+				// Commit response from buffer input to response
+				assert(!handle->mCmds.empty());
+				PJLinkCommand reply(handle->mCmds.front());
 				std::istream is(&handle->mRespBuffer);
 				std::getline(std::istream(&handle->mRespBuffer), reply.mResponse, pjlink::terminator);
 
@@ -220,6 +227,17 @@ namespace nap
 				// Forward response and set timer
 				handle->mProjector.response(std::move(reply));
 				handle->setTimer();
+
+				// After receiving a response, we're ready to send a subsequent request
+				// PJLink requires the response to be sent before attempting a new write..
+				handle->mCmds.pop();
+
+
+				if (!handle->mCmds.empty())
+					handle->write(handle->mCmds.front());
+
+				// Keep reading until there's a new response
+				handle->read();
 			});
 	}
 
