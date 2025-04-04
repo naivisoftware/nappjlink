@@ -5,7 +5,7 @@
 	
 # Description
 
-Adds support for remote-control of [PJLink](https://pjlink.jbmia.or.jp/english)-compatible projectors using NAP applications.
+Adds remote control of [PJLink](https://pjlink.jbmia.or.jp/english)-compatible projectors to NAP applications. 
 
 ## Installation
 
