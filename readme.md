@@ -80,5 +80,5 @@ You must assign a `nap::PJLinkProjectorPool` to every projector. The pool runs a
 
 ## Authentication
 
-Authentication is *not* supported at the moment. You must **turn off authentication** in your projector. Any authentication request will cause the connection attempt to fail, an error message is reported.
+Authentication is *not* supported at the moment. You must **turn off authentication** in your projector. Any authentication request will cause the connection attempt to fail, in that case an error message is reported.
 
