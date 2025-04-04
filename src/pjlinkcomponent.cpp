@@ -50,6 +50,7 @@ namespace nap
 		// Consume messages
 		while (!mcQueue.empty())
 		{
+			messageReceived(*mcQueue.front());
 			mcQueue.pop();
 		}
 	}

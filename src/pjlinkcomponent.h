@@ -16,7 +16,7 @@ namespace nap
 	class PJLinkComponentInstance;
 
 	/**
-	 * Receives and forwards pjlink client messages.
+	 * Receives and forwards pjlink client messages on the main thread.
 	 */
 	class NAPAPI PJLinkComponent : public Component
 	{
@@ -28,8 +28,10 @@ namespace nap
 
 
 	/**
-	 * Receives and forwards pjlink client messages.
-	 * Register to the ResponseReceived signal to receive projector messages.
+	 * Receives and forwards pjlink client messages on the main thread.
+	 * 
+	 * Register to the messageReceived signal to receive projector messages.
+	 * The signal is invoked on the main (application) thread, on update() of this component.
 	 */
 	class NAPAPI PJLinkComponentInstance : public ComponentInstance
 	{
@@ -46,9 +48,26 @@ namespace nap
 		 */
 		void update(double deltaTime) override;
 
+		/**
+		 * @return assigned projector
+		 */
+		PJLinkProjector& getProjector()					{ assert(mProjector != nullptr); return *mProjector; }
+
+		/**
+		 * @return assigned projector
+		 */
+		const PJLinkProjector& getProjector() const		{ assert(mProjector != nullptr); return *mProjector; }
+
+		/**
+		 * Called when the component receives a message from the assigned projector.
+		 * The signal is invoked on the main (application) thread, on update() of this component.
+		 */
+		nap::Signal<const PJLinkCommand&> messageReceived;
+
 	private:
 		nap::PJLinkProjector* mProjector = nullptr;
 
+		// Called from pjlink event thread
 		void onResponse(const PJLinkCommand&);
 		nap::Slot<const PJLinkCommand&> mResponseSlot = { this, &PJLinkComponentInstance::onResponse };
 		std::queue<PJLinkCommandPtr> mrQueue;
