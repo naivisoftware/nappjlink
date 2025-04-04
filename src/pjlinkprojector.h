@@ -29,7 +29,7 @@ namespace nap
 	 * You as a user don't have to worry about the state of the connection, that is done here for you.
 	 * 
 	 * All communication is a-synchronous: all calls to send() will return immediately -> the command is queued for write.
-	 * On success, the response message from the projector is forwarded to the (a) component that listens to this projector.
+	 * On success, the response message from the projector is forwarded to the nap::PJLinkComponent that listens to this projector.
 	 * If no component is listening the response is simply discarded.
 	 *
 	 * You must assign a nap::PJLinkProjectorPool to every projector.
