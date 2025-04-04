@@ -23,7 +23,7 @@ namespace nap
 		if (mConnect)
 		{
 			// Create client connection
-			auto client = getConnection(errorState);
+			auto client = getConnection(true, errorState);
 			if (client == nullptr)
 				return false;
 
@@ -39,7 +39,7 @@ namespace nap
 	void PJLinkProjector::stop()
 	{
 		utility::ErrorState error;
-		auto client = getConnection(error);
+		auto client = getConnection(false, error);
 		if (client != nullptr)
 		{
 			auto cf = client->disconnect();
@@ -55,7 +55,7 @@ namespace nap
 	void PJLinkProjector::send(PJLinkCommandPtr cmd)
 	{
 		utility::ErrorState error;
-		auto client = getConnection(error);
+		auto client = getConnection(true, error);
 		if (client == nullptr)
 		{
 			nap::Logger::error(error.toString());
@@ -94,10 +94,10 @@ namespace nap
 	}
 
 
-	std::shared_ptr<nap::PJLinkConnection> PJLinkProjector::getConnection(utility::ErrorState& error)
+	std::shared_ptr<nap::PJLinkConnection> PJLinkProjector::getConnection(bool setup, utility::ErrorState& error)
 	{
 		std::lock_guard<std::mutex> lock(mConnectionMutex);
-		if (mConnection == nullptr)
+		if (mConnection == nullptr && setup)
 		{
 			mConnection = create(error);
 			if (mConnection != nullptr)

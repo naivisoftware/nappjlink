@@ -92,11 +92,6 @@ namespace nap
 		auto handle = shared_from_this();
 		auto f = asio::post(mSocket.get_executor(), asio::use_future([handle]
 			{
-				// Bail if we're already shut down
-				if (!handle->mSocket.is_open())
-					return;
-
-				// Close
 				handle->close();
 			}
 		));

@@ -7,6 +7,7 @@
 
 // External includes
 #include <assert.h>
+#include <nap/logger.h>
 
 // Base class
 RTTI_BEGIN_CLASS(nap::PJLinkCommand)
@@ -76,8 +77,25 @@ namespace nap
 
 	nap::PJLinkCommandPtr PJLinkCommand::clone() const
 	{
-		rtti::Factory factory;
-		return rtti::cloneObject(*this, factory);
+		// Create clone
+		assert(this->get_type().can_create_instance());
+		auto clone = std::unique_ptr<PJLinkCommand>(get_type().create<PJLinkCommand>());
+		if (clone == nullptr)
+		{
+			assert(false);
+			nap::Logger::error("Failed to clone PJLink command of type: '%s'",
+				this->get_type().get_name().data());
+			return nullptr;
+		}
+
+		// Copy properties
+		for (const rtti::Property& property : get_type().get_properties())
+		{
+			rtti::Variant new_value = property.get_value(*this);
+			bool success = property.set_value(*clone, new_value);
+			assert(success);
+		}
+		return clone;
 	}
 
 

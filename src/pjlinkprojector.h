@@ -108,7 +108,7 @@ namespace nap
 		std::shared_ptr<PJLinkConnection> create(utility::ErrorState & error);
 
 		// Get current connection handle
-		std::shared_ptr<PJLinkConnection> getConnection(utility::ErrorState& error);
+		std::shared_ptr<PJLinkConnection> getConnection(bool make, utility::ErrorState& error);
 
 		std::mutex mConnectionMutex;
 		std::shared_ptr<PJLinkConnection> mConnection = nullptr;	//< Client connection

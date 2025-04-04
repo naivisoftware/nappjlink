@@ -66,12 +66,15 @@ namespace nap
 	 * Use this for custom pjlink commands without specialization.
 	 * Can be copied and moved.
 	 */
-	class NAPAPI PJLinkCommand : public rtti::Object
+	class NAPAPI PJLinkCommand
 	{
-		RTTI_ENABLE(rtti::Object)
+		RTTI_ENABLE()
 	public:
 		// Construct cmd from body and value
 		PJLinkCommand(const std::string& body, const std::string& value);
+
+		// Creates an invalid pjlink command
+		PJLinkCommand() = default;
 
 		/**
 		 * @return projector command
@@ -94,17 +97,12 @@ namespace nap
 		const std::string& getResponse()		{ return mResponse; }
 
 		/**
-		 * Clones the command
+		 * A clone of this command, including all derived properties
 		 */
 		PJLinkCommandPtr clone() const;
 
 		std::string mCommand;					//< Full PJLink command message
-		std::string mResponse;					//< Full PJLink command response
-
-	protected:
-
-		// Default (invalid) cmd
-		PJLinkCommand() = default;
+		std::string mResponse;					//< Full PJLink command respons
 	};
 
 
@@ -142,6 +140,7 @@ namespace nap
 		PJLinkSetAVMuteCommand(bool value) :
 			PJLinkSetCommand(pjlink::cmd::set::avmute, value ? "31" : "30")		{ }
 
+		// Invalid set command
 		PJLinkSetAVMuteCommand() = default;
 	};
 
@@ -182,6 +181,9 @@ namespace nap
 	public:
 		PJLinkGetCommand(const std::string& body) :
 			PJLinkCommand(body, &pjlink::cmd::query)	{ }
+
+		// Invalid get command
+		PJLinkGetCommand() = default;
 	};
 
 	// Get power status
