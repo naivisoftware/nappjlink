@@ -36,8 +36,9 @@ clone https://github.com/naivisoftware/nappjlink.git
 In Napkin:
 
 1. add a `nap::PJLinkProjectorPool` resource
-2. add a `nap::PJLinkProjector` resource
-3. assign the pool (1) to the projector (2)
+2. set the ip address of the projector on the network
+3. add a `nap::PJLinkProjector` resource
+4. assign the pool (1) to the projector (2)
 
 In your application:
 
