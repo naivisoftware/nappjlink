@@ -12,33 +12,46 @@
 
 namespace nap
 {
+	class PJLinkCommand;					//< Generic PJLink Command
+
+	// Set commands
+	class PJLinkSetPowerCommand;			//< Turn power on or off
+	class PJLinkSetAVMuteCommand;			//< Turn avmute (audio & video) on or off
+	class PJLinkSetInputCommand;			//< Select input
+
+	// Get commands
+	class PJLinkGetPowerCommand;			//< Get current power status 
+	class PJLinkGetAVMuteCommand;			//< Get current audio visual mute status
+	class PJLinkGetLampStatusCommand;		//< Get current lamp hours
+	class PJLinkGetErrorStatusCommand;		//< Get error status
+
 	/**
 	 * PJLink protocol message specifications
 	 */
 	namespace pjlink
 	{
-		constexpr const int port = 4352;					//< PJ Link communication port number
-		constexpr const char terminator = '\r';				//< PJ link msg terminator
+		constexpr const int port = 4352;						//< PJ Link communication port number
+		constexpr const char terminator = '\r';					//< PJ link msg terminator
 
 		namespace cmd
 		{
-			constexpr const size_t size = 136;				//< PJ link max cmd size
-			constexpr const char header = '%';				//< PJ link cmd header
-			constexpr const char version = '1';				//< PJ link cmd version
-			constexpr const char seperator = ' ';			//< PJ link seperator
-			constexpr const char query = '?';				//< PJ link query parameter
+			constexpr const size_t size = 136;					//< PJ link max cmd size
+			constexpr const char header = '%';					//< PJ link cmd header
+			constexpr const char version = '1';					//< PJ link cmd version
+			constexpr const char seperator = ' ';				//< PJ link seperator
+			constexpr const char query = '?';					//< PJ link query parameter
 			namespace set
 			{
-				constexpr const char* power = "POWR";		//< Turn projector on(1) or off(0)
-				constexpr const char* avmute = "AVMT";		//< Turn video(10,11), audio(20,21) or both(30,31) on or off
-				constexpr const char* input = "INPT";		//< Select input, RGB(1n), VIDEO(2n), DIGITAL(3n)
+				constexpr const char* power = "POWR";			//< Turn projector on(1) or off(0)
+				constexpr const char* avmute = "AVMT";			//< Turn video(10,11), audio(20,21) or both(30,31) on or off
+				constexpr const char* input = "INPT";			//< Select input, RGB(1n), VIDEO(2n), DIGITAL(3n)
 			}
 			namespace get
 			{
-				constexpr const char* power = "POWR";		//< Power query -> 0(off), 1(on), 2(cooling), 3(warming)
-				constexpr const char* avmute = "AVMT";		//< Mute query -> x1(on), x0(off)
-				constexpr const char* error = "ERST";		//< Error status -> 1(fan), 2(lamp), 3(temp), 4(cover), 5(filter), 6(other)
-				constexpr const char* hours = "LAMP";		//< Lamp hours -> x
+				constexpr const char* power = "POWR";			//< Power query -> 0(off), 1(on), 2(cooling), 3(warming)
+				constexpr const char* avmute = "AVMT";			//< Mute query -> x1(on), x0(off)
+				constexpr const char* error = "ERST";			//< Error status -> 1(fan), 2(lamp), 3(temp), 4(cover), 5(filter), 6(other)
+				constexpr const char* hours = "LAMP";			//< Lamp hours -> x
 
 			}
 		}
@@ -121,6 +134,7 @@ namespace nap
 		PJLinkSetCommand() = default;
 	};
 
+
 	// Power on / off
 	class NAPAPI PJLinkSetPowerCommand : public PJLinkSetCommand
 	{
@@ -131,6 +145,7 @@ namespace nap
 
 		PJLinkSetPowerCommand() = default;
 	};
+
 
 	// Mute (av) on / off
 	class NAPAPI PJLinkSetAVMuteCommand : public PJLinkSetCommand
@@ -143,6 +158,7 @@ namespace nap
 		// Invalid set command
 		PJLinkSetAVMuteCommand() = default;
 	};
+
 
 	// Input selection
 	class NAPAPI PJLinkSetInputCommand : public PJLinkSetCommand
@@ -186,6 +202,7 @@ namespace nap
 		PJLinkGetCommand() = default;
 	};
 
+
 	// Get power status
 	class NAPAPI PJLinkGetPowerCommand : public PJLinkGetCommand
 	{
@@ -211,6 +228,7 @@ namespace nap
 		EStatus getPowerStatus() const;
 	};
 
+
 	// Get mute status
 	class NAPAPI PJLinkGetAVMuteCommand : public PJLinkGetCommand
 	{
@@ -220,6 +238,7 @@ namespace nap
 			PJLinkGetCommand(pjlink::cmd::get::avmute)		{ }
 	};
 
+
 	// Get lamp status
 	class NAPAPI PJLinkGetLampStatusCommand : public PJLinkGetCommand
 	{
@@ -228,6 +247,7 @@ namespace nap
 		PJLinkGetLampStatusCommand() :
 			PJLinkGetCommand(pjlink::cmd::get::hours)		{ }
 	};
+
 
 	// Get error status
 	class NAPAPI PJLinkGetErrorStatusCommand : public PJLinkGetCommand
