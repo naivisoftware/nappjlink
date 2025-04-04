@@ -76,7 +76,7 @@ namespace nap
 	void PJLinkProjector::response(const PJLinkCommand& message)
 	{
 		// Notify listeners
-		ResponseReceived(message);
+		responseReceived(message);
 	}
 
 

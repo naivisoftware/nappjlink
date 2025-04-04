@@ -24,8 +24,14 @@ namespace nap
 	}
 
 	/**
-	 * PJLink shared client context.
-	 * Manages multiple projector connections thread-safe.
+	 * PJLink shared runtime context.
+	 *
+	 * Runs all queued I/O network requests a-synchronous for all assigned projectors,
+	 * on an assigned worker thread.
+
+	 * Every projector is required to be assigned to a pool.
+	 * Having more than 1 pool in your application is often not beneficial, unless
+	 * you are controlling more than 100 projectors ;) 
 	 */
 	class NAPAPI PJLinkProjectorPool : public Resource
 	{

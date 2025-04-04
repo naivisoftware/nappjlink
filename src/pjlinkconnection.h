@@ -28,12 +28,13 @@ namespace nap
 
 	/**
 	 * PJLink client connection instance, instantiated by the PJLinkProjector.
+	 * Handles all PJLink TCP/IP IO a-synchronous.
 	 */
 	class NAPAPI PJLinkConnection : public std::enable_shared_from_this<PJLinkConnection>
 	{
 	public:
 		// tcp connection timeout in seconds
-		static constexpr double sTimeout = 20.0;
+		static constexpr int sTimeout = 20;
 
 		/**
 		 * Creates a pjlink connection.
@@ -92,7 +93,7 @@ namespace nap
 		void setTimer();
 
 		// A-sync objects -> accessed from socket execution context
-		pjlink::StreamBuf mAuthBuffer;					//< Authentification buffer
+		pjlink::StreamBuf mAuthBuffer;					//< Authentication buffer
 		pjlink::StreamBuf  mRespBuffer;					//< Response buffer
 		std::queue<PJLinkCommandPtr> mCmds;				//< Commands to send
 		std::unique_ptr<asio::steady_timer> mTimeout;	//< Timeout connection timer

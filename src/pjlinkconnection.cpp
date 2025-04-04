@@ -8,9 +8,8 @@
 #include "pjlinkcommand.h"
 
 // External includes
-#include <asio/connect.hpp>
-#include <asio/read.hpp>
 #include <nap/logger.h>
+#include <asio/connect.hpp>
 #include <asio/read_until.hpp>
 #include <asio/write.hpp>
 #include <asio/use_future.hpp>
@@ -280,7 +279,7 @@ namespace nap
 
 	void PJLinkConnection::setTimer()
 	{
-		mTimeout = std::make_unique<asio::steady_timer>(mSocket.get_executor(), nap::Seconds(20));
+		mTimeout = std::make_unique<asio::steady_timer>(mSocket.get_executor(), nap::Seconds(sTimeout));
 		mTimeout->async_wait(
 			std::bind(&PJLinkConnection::timeout, shared_from_this(), std::placeholders::_1)
 		);

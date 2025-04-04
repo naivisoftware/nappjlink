@@ -23,7 +23,7 @@ namespace nap
 		// Listen for changes
 		auto resource = getComponent<PJLinkComponent>();
 		mProjector = resource->mProjector.get();
-		mProjector->ResponseReceived.connect(mResponseSlot);
+		mProjector->responseReceived.connect(mResponseSlot);
 
 		return true;
 	}

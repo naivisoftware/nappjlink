@@ -20,6 +20,21 @@ namespace nap
 	/**
 	 * PJLink projector communication interface.
 	 * Acts as a client to control and operate a pjlink enabled projector on the network.
+	 * 
+	 * The projector establishes a connection (a-sync) when a message is sent, or on startup when 'ConnectOnStartup' is set to true.
+	 * Initialization will fail if the connection can't be established when 'ConnectOnStartup' is set to true (defaults to false).
+	 * 
+	 * A connection remains available for 20 seconds after receiving the last response from the projector.
+	 * Subsequent messages will establish a new connection, as outlined in the pjlink protocol document.
+	 * You as a user don't have to worry about the state of the connection, that is done here for you.
+	 * 
+	 * All communication is a-synchronous: all calls to send() will return immediately -> the command is queued for write.
+	 * On success, the response message from the projector is forwarded to the (a) component that listens to this projector.
+	 * If no component is listening the response is simply discarded.
+	 *
+	 * You must assign a nap::PJLinkProjectorPool to every projector.
+	 * 
+	 * The pool runs all queued I/O network requests a-synchronous on it's assigned worker thread.
 	 */
 	class NAPAPI PJLinkProjector : public Device
 	{
@@ -83,7 +98,7 @@ namespace nap
 		bool start(utility::ErrorState& errorState) override;
 
 		/**
-		 * Disconnect the projector.
+		 * Disconnects the projector.
 		 * Called by core before destruction.
 		 */
 		void stop() override;
@@ -92,8 +107,11 @@ namespace nap
 		std::string mIPAddress = "192.168.0.1";					//< Property: 'IP Address' ip address of the projector on the network
 		nap::ResourcePtr<PJLinkProjectorPool> mPool;			//< Property: 'Pool' Interface that manages the connection
 
-		// Signal called when receiving a pj link response
-		nap::Signal<const PJLinkCommand&> ResponseReceived;
+		/**
+		 * Called by the **network processing thread** after receiving a response.
+		 * Use PJLinkComponent::messageReceived to receive this message on the application thread.
+		 */
+		nap::Signal<const PJLinkCommand&> responseReceived;
 
 	private:
 		friend class PJLinkConnection;
