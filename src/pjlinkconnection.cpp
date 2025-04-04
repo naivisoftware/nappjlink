@@ -57,6 +57,9 @@ namespace nap
 						handle->mAddress.to_string().c_str(),
 						handle->mEndpoint.port());
 					return false;
+
+					// Notify listeners explicitly here -> otherwise on close
+					handle->mProjector.connectionClosed();
 				}
 
 				// Connection success -> verify authentification
@@ -264,6 +267,8 @@ namespace nap
 
 		// Cancel outstanding timing operations
 		nap::Logger::info("%s: Connection closed", mAddress.to_string().c_str());
+
+		// Notify listeners
 		mProjector.connectionClosed();
 	}
 
