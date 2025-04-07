@@ -78,10 +78,7 @@ namespace nap
 	std::string nap::PJLinkCommand::getResponse() const
 	{
 		if (mResponse.empty())
-		{
-			assert(false);
 			return "";
-		}
 
 		// Get loc of response
 		auto loc = mResponse.find_last_of(pjlink::cmd::equals);
@@ -104,6 +101,27 @@ namespace nap
 		auto count = mCommand.size() - sizeof(pjlink::terminator) - 2;
 		assert(mCommand.back() == pjlink::terminator &&  count > 0);
 		return mCommand.substr(2, count);
+	}
+
+
+	int nap::PJLinkCommand::getErrorCode() const
+	{
+		// Empty
+		auto response = getResponse();
+		if (response.empty())
+			return -1;
+	
+		// ERROR
+		if (utility::startsWith(response, pjlink::cmd::error))
+		{
+			auto s = strlen(pjlink::cmd::error);
+			auto c = response.size() - s;
+			assert(c > 0);
+			return stoi(response.substr(s, c));
+		}
+
+		// OK
+		return 0;
 	}
 
 
@@ -148,5 +166,4 @@ namespace nap
 
 		return EStatus::Cooling;
 	}
-
 }

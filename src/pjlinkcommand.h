@@ -41,6 +41,8 @@ namespace nap
 			constexpr const char seperator = ' ';				//< PJ link seperator
 			constexpr const char query = '?';					//< PJ link query parameter
 			constexpr const char equals = '=';					//< PJ link equals parameter
+			constexpr const char* error = "ERR";				//< PJ link error response parameter
+
 			namespace set
 			{
 				constexpr const char* power = "POWR";			//< Turn projector on(1) or off(0)
@@ -108,11 +110,22 @@ namespace nap
 		std::string getCommand() const;
 
 		/**
+		 * @return if there is a response
+		 */
+		bool hasResponse() const				{ return !mResponse.empty(); }
+
+		/**
 		 * Returns formatted response excluding header, command & terminator.
 		 * Includes only the received parameter body.
 		 * @return projector response message
 		 */
 		std::string getResponse() const;
+
+		/**
+		 * Returns response error code, 0 if there is no error, -1 if there is no response
+		 * @return Response error code, 0 if there is no error, -1 if there is no response
+		 */
+		int getErrorCode() const;
 
 		/**
 		 * A clone of this command, including all derived properties
