@@ -294,6 +294,11 @@ namespace nap
 	public:
 		PJLinkGetLampStatusCommand() :
 			PJLinkGetCommand(pjlink::cmd::get::hours)		{ }
+
+		/**
+		 * Total number of hours, -1 if response is invalid
+		 */
+		int getHours() const;
 	};
 
 

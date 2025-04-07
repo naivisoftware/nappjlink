@@ -223,4 +223,18 @@ namespace nap
 			}
 		}
 	}
+
+
+	int nap::PJLinkGetLampStatusCommand::getHours() const
+	{
+		if (!hasResponse())
+			return -1;
+
+		// Multiple lamps could be available, we only support 1
+		// TODO: Support multiple?
+		auto response = getResponse();
+		auto parts = utility::splitString(response, pjlink::cmd::seperator);
+		assert(parts.size() > 1);
+		return stoi(parts[parts.size() - 2]);
+	}
 }
