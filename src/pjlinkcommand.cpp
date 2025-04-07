@@ -75,6 +75,38 @@ namespace nap
 	}
 
 
+	std::string nap::PJLinkCommand::getResponse() const
+	{
+		if (mResponse.empty())
+		{
+			assert(false);
+			return "";
+		}
+
+		// Get loc of response
+		auto loc = mResponse.find_last_of(pjlink::cmd::equals);
+		assert(loc != std::string::npos);
+
+		// Return substring
+		loc++; assert(loc < mResponse.size());
+		return mResponse.substr(loc, mResponse.size() - loc);
+	}
+
+
+	std::string nap::PJLinkCommand::getCommand() const
+	{
+		if (mCommand.empty())
+		{
+			assert(false);
+			return "";
+		}
+
+		auto count = mCommand.size() - sizeof(pjlink::terminator) - 2;
+		assert(mCommand.back() == pjlink::terminator &&  count > 0);
+		return mCommand.substr(2, count);
+	}
+
+
 	nap::PJLinkCommandPtr PJLinkCommand::clone() const
 	{
 		// Create clone

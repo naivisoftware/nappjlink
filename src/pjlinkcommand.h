@@ -40,6 +40,7 @@ namespace nap
 			constexpr const char version = '1';					//< PJ link cmd version
 			constexpr const char seperator = ' ';				//< PJ link seperator
 			constexpr const char query = '?';					//< PJ link query parameter
+			constexpr const char equals = '=';					//< PJ link equals parameter
 			namespace set
 			{
 				constexpr const char* power = "POWR";			//< Turn projector on(1) or off(0)
@@ -90,11 +91,6 @@ namespace nap
 		PJLinkCommand() = default;
 
 		/**
-		 * @return projector command
-		 */
-		const std::string& getCommand()			{ return mCommand; }
-
-		/**
 		 * @return cmd characters
 		 */
 		const char* data()						{ return mCommand.data(); }
@@ -105,17 +101,26 @@ namespace nap
 		size_t size()							{ return mCommand.size(); }
 
 		/**
+		 * Returns formatted command excluding header, response & terminator.
+		 * Includes only the command body
+		 * @return projector command
+		 */
+		std::string getCommand() const;
+
+		/**
+		 * Returns formatted response excluding header, command & terminator.
+		 * Includes only the received parameter body.
 		 * @return projector response message
 		 */
-		const std::string& getResponse()		{ return mResponse; }
+		std::string getResponse() const;
 
 		/**
 		 * A clone of this command, including all derived properties
 		 */
 		PJLinkCommandPtr clone() const;
 
-		std::string mCommand;					//< Full PJLink command message
-		std::string mResponse;					//< Full PJLink command respons
+		std::string mCommand;					//< Full PJLink command message, including header & terminator
+		std::string mResponse;					//< Full PJLink command response, including header & terminator
 	};
 
 
