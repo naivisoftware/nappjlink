@@ -149,6 +149,12 @@ namespace nap
 	}
 
 
+	bool nap::PJLinkSetCommand::success() const
+	{
+		return getResponse() == pjlink::cmd::set::ok;
+	}
+
+
 	PJLinkSetInputCommand::PJLinkSetInputCommand(EType type, nap::uint8 number)
 	{
 		assert(number > 0 && number < 10);

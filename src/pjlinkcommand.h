@@ -48,6 +48,7 @@ namespace nap
 				constexpr const char* power = "POWR";			//< Turn projector on(1) or off(0)
 				constexpr const char* avmute = "AVMT";			//< Turn video(10,11), audio(20,21) or both(30,31) on or off
 				constexpr const char* input = "INPT";			//< Select input, RGB(1n), VIDEO(2n), DIGITAL(3n)
+				constexpr const char* ok = "OK";				//< If the message has been received and processed by the projector
 			}
 			namespace get
 			{
@@ -150,6 +151,11 @@ namespace nap
 			PJLinkCommand(body, value) { }
 
 		PJLinkSetCommand() = default;
+
+		/**
+		 * @return if the projector received and processed the request
+		 */
+		bool success() const;
 	};
 
 
