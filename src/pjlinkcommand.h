@@ -87,6 +87,16 @@ namespace nap
 	{
 		RTTI_ENABLE()
 	public:
+		enum class EResponseCode : char
+		{
+			Ok					= '0',		//< Command accepted
+			SupportError		= '1',		//< Unsupported command
+			ParameterError		= '2',		//< Parameter out of bounds
+			TimeError			= '3',		//< Time issue
+			ProjectorError		= '4',		//< Projector display failure
+			Invalid				= 0x00		//< No response
+		};
+
 		// Construct cmd from body and value
 		PJLinkCommand(const std::string& body, const std::string& value);
 
@@ -123,10 +133,10 @@ namespace nap
 		std::string getResponse() const;
 
 		/**
-		 * Returns response error code, 0 if there is no error, -1 if there is no response
-		 * @return Response error code, 0 if there is no error, -1 if there is no response
+		 * Returns response error code
+		 * @return Response error code
 		 */
-		int getErrorCode() const;
+		EResponseCode getResponseCode() const;
 
 		/**
 		 * A clone of this command, including all derived properties
@@ -195,11 +205,11 @@ namespace nap
 		// Available input types
 		enum class EType : char
 		{
-			RGB			= 1,
-			Video		= 2,
-			Digital		= 3,
-			Storage		= 4,
-			Network		= 5
+			RGB			= '1',
+			Video		= '2',
+			Digital		= '3',
+			Storage		= '4',
+			Network		= '5'
 		};
 
 		/**
@@ -238,9 +248,9 @@ namespace nap
 			On				= '1',		//< Projector is on
 			Cooling			= '2',		//< Projector is cooling down
 			WarmingUp		= '3',		//< Projector is warming up
-			Unavailable		= '4',		//< Projector is unavailable
-			Error			= '5',		//< Projector power error
-			Invalid			= 0x00		//< Response not available
+			TimeError		= '4',		//< Projector is unavailable
+			ProjectorError	= '5',		//< Projector power error
+			Unknown			= 0x00		//< Response not available
 		};
 
 		PJLinkGetPowerCommand() :
@@ -249,7 +259,7 @@ namespace nap
 		/**
 		 * @return power status
 		 */
-		EStatus getPowerStatus() const;
+		EStatus getStatus() const;
 	};
 
 
@@ -258,8 +268,22 @@ namespace nap
 	{
 		RTTI_ENABLE(PJLinkGetCommand)
 	public:
+		enum class EStatus : char
+		{
+			Off				= '0',		
+			On				= '1',		// 31! == (audio & video)
+			TimeError		= '3',
+			ProjectorError	= '4',
+			Unknown			= 0x00
+		};
+
 		PJLinkGetAVMuteCommand() :
 			PJLinkGetCommand(pjlink::cmd::get::avmute)		{ }
+
+		/**
+		 * @return av mute status
+		 */
+		EStatus getStatus() const;
 	};
 
 

@@ -41,6 +41,32 @@ RTTI_DEFINE_CLASS(nap::PJLinkGetAVMuteCommand)
 RTTI_DEFINE_CLASS(nap::PJLinkGetLampStatusCommand)
 RTTI_DEFINE_CLASS(nap::PJLinkGetErrorStatusCommand)
 
+RTTI_BEGIN_ENUM(nap::PJLinkCommand::EResponseCode)
+	RTTI_ENUM_VALUE(nap::PJLinkCommand::EResponseCode::Ok,					"Ok"),
+	RTTI_ENUM_VALUE(nap::PJLinkCommand::EResponseCode::SupportError,		"Not Supported"),
+	RTTI_ENUM_VALUE(nap::PJLinkCommand::EResponseCode::ParameterError,		"Parameter Unavailable"),
+	RTTI_ENUM_VALUE(nap::PJLinkCommand::EResponseCode::TimeError,			"Time Unavailable"),
+	RTTI_ENUM_VALUE(nap::PJLinkCommand::EResponseCode::ProjectorError,		"Projector Failure")
+RTTI_END_ENUM
+
+RTTI_BEGIN_ENUM(nap::PJLinkGetPowerCommand::EStatus)
+	RTTI_ENUM_VALUE(nap::PJLinkGetPowerCommand::EStatus::Off,				"Off"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetPowerCommand::EStatus::On,				"On"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetPowerCommand::EStatus::Cooling,			"Cooling Down"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetPowerCommand::EStatus::WarmingUp,			"Warming Up"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetPowerCommand::EStatus::TimeError,			"Unavailable"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetPowerCommand::EStatus::ProjectorError	,	"Projector Failure"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetPowerCommand::EStatus::Unknown,			"Unknown")
+RTTI_END_ENUM
+
+RTTI_BEGIN_ENUM(nap::PJLinkGetAVMuteCommand::EStatus)
+	RTTI_ENUM_VALUE(nap::PJLinkGetAVMuteCommand::EStatus::Off,				"Off"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetAVMuteCommand::EStatus::On,				"On"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetAVMuteCommand::EStatus::TimeError,		"Unavailable"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetAVMuteCommand::EStatus::ProjectorError,	"Projector Failure"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetAVMuteCommand::EStatus::Unknown,			"Unknown")
+RTTI_END_ENUM
+
 RTTI_BEGIN_ENUM(nap::PJLinkSetInputCommand::EType)
 	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::RGB,			"RGB"),
 	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::Video,		"Video"),
@@ -48,7 +74,6 @@ RTTI_BEGIN_ENUM(nap::PJLinkSetInputCommand::EType)
 	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::Storage,		"Storage"),
 	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::Network,		"Network")
 RTTI_END_ENUM
-
 
 namespace nap
 {
@@ -104,24 +129,17 @@ namespace nap
 	}
 
 
-	int nap::PJLinkCommand::getErrorCode() const
+	PJLinkCommand::EResponseCode nap::PJLinkCommand::getResponseCode() const
 	{
 		// Empty
 		auto response = getResponse();
 		if (response.empty())
-			return -1;
+			return PJLinkCommand::EResponseCode::Invalid;
 	
 		// ERROR
-		if (utility::startsWith(response, pjlink::cmd::error))
-		{
-			auto s = strlen(pjlink::cmd::error);
-			auto c = response.size() - s;
-			assert(c > 0);
-			return stoi(response.substr(s, c));
-		}
-
-		// OK
-		return 0;
+		return utility::startsWith(response, pjlink::cmd::error) ?
+			static_cast<PJLinkCommand::EResponseCode>(response.back()) :
+			PJLinkCommand::EResponseCode::Ok;
 	}
 
 
@@ -165,11 +183,44 @@ namespace nap
 	}
 
 
-	nap::PJLinkGetPowerCommand::EStatus PJLinkGetPowerCommand::getPowerStatus() const
+	nap::PJLinkGetPowerCommand::EStatus PJLinkGetPowerCommand::getStatus() const
 	{
-		if (mResponse.empty())
-			return EStatus::Invalid;
+		switch (this->getResponseCode())
+		{
+			case PJLinkCommand::EResponseCode::Ok:
+				return static_cast<PJLinkGetPowerCommand::EStatus>(getResponse().back());
+			case PJLinkCommand::EResponseCode::TimeError:
+				return EStatus::TimeError;
+			case PJLinkCommand::EResponseCode::ProjectorError:
+				return EStatus::ProjectorError;
+			default:
+			{
+				assert(false);
+				return EStatus::Unknown;
+			}
+		}
+	}
 
-		return EStatus::Cooling;
+
+	nap::PJLinkGetAVMuteCommand::EStatus nap::PJLinkGetAVMuteCommand::getStatus() const
+	{
+		switch (this->getResponseCode())
+		{
+			case PJLinkCommand::EResponseCode::TimeError:
+				return EStatus::TimeError;
+			case PJLinkCommand::EResponseCode::ProjectorError:
+				return EStatus::ProjectorError;
+			case PJLinkCommand::EResponseCode::Ok:
+			{
+				auto response = getResponse();
+				assert(response.size() == 2);
+				return response.substr(0, 2) == "31" ? EStatus::On : EStatus::Off;
+			}
+			default:
+			{
+				assert(false);
+				return EStatus::Unknown;
+			}
+		}
 	}
 }
