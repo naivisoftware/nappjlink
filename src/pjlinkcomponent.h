@@ -62,7 +62,7 @@ namespace nap
 		 * Called when the component receives a message from the assigned projector.
 		 * The signal is invoked on the main (application) thread, on update() of this component.
 		 */
-		nap::Signal<const PJLinkCommand&> messageReceived;
+		nap::Signal<const PJLinkComponentInstance&, const PJLinkCommand&> messageReceived;
 
 	private:
 		nap::PJLinkProjector* mProjector = nullptr;
