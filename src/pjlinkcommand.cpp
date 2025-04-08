@@ -75,6 +75,20 @@ RTTI_BEGIN_ENUM(nap::PJLinkSetInputCommand::EType)
 	RTTI_ENUM_VALUE(nap::PJLinkSetInputCommand::EType::Network,		"Network")
 RTTI_END_ENUM
 
+RTTI_BEGIN_ENUM(nap::PJLinkGetErrorStatusCommand::EStatus)
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::None,			"None"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Fan,				"Fan"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Lamp	,			"Lamp"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Temerature,		"Temperature"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Cover,			"Cover"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Filter,			"Filter"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Other,			"Other"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::TimeError,		"Unavailable"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::ProjectorError,	"Projector Failure"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Unknown,			"Unknown")
+RTTI_END_ENUM
+
+
 namespace nap
 {
 	static std::string createCmd(const std::string& cmd, const std::string& value)
@@ -178,7 +192,7 @@ namespace nap
 		assert(number > 0 && number < 10);
 		std::string is;
 		is += static_cast<char>(type);
-		is += static_cast<char>(number + 0x30);
+		is += static_cast<char>(number + '0');
 		mCommand = createCmd(pjlink::cmd::set::input, is);
 	}
 
@@ -194,10 +208,7 @@ namespace nap
 			case PJLinkCommand::EResponseCode::ProjectorError:
 				return EStatus::ProjectorError;
 			default:
-			{
-				assert(false);
 				return EStatus::Unknown;
-			}
 		}
 	}
 
@@ -217,10 +228,7 @@ namespace nap
 				return response.substr(0, 2) == "31" ? EStatus::On : EStatus::Off;
 			}
 			default:
-			{
-				assert(false);
 				return EStatus::Unknown;
-			}
 		}
 	}
 
@@ -236,5 +244,89 @@ namespace nap
 		auto parts = utility::splitString(response, pjlink::cmd::seperator);
 		assert(parts.size() > 1);
 		return stoi(parts[parts.size() - 2]);
+	}
+
+
+	static nap::uint8 createMask(const std::string& response, char check)
+	{
+		nap::uint8 mask = 0;
+		assert(response.size() == 6);
+		for (auto i = 0; i < response.size(); i++)
+			mask |= response[i] == check ? 0x01U << i : 0x00U;
+		return mask;
+	}
+
+
+	nap::uint16 nap::PJLinkGetErrorStatusCommand::getWarnings() const
+	{
+		switch (this->getResponseCode())
+		{
+			case PJLinkCommand::EResponseCode::Ok:
+				return createMask(getResponse(), '1');
+			case PJLinkCommand::EResponseCode::TimeError:
+			case PJLinkCommand::EResponseCode::ProjectorError:
+				return static_cast<nap::uint>(PJLinkGetErrorStatusCommand::EStatus::None);
+			default:
+				return (0x01U << 8);
+		}
+	}
+
+
+	nap::uint16 nap::PJLinkGetErrorStatusCommand::getErrors() const
+	{
+		switch (this->getResponseCode())
+		{
+			case PJLinkCommand::EResponseCode::Ok:
+				return createMask(getResponse(), '2');
+			case PJLinkCommand::EResponseCode::TimeError:
+				return (0x01U << 6);
+			case PJLinkCommand::EResponseCode::ProjectorError:
+				return (0x01U << 7);
+			default:
+				return (0x01U << 8);
+		}
+	}
+
+
+	bool nap::PJLinkGetErrorStatusCommand::toString(nap::uint16 mask, std::string& outString, utility::ErrorState& error)
+	{
+		auto status_type = RTTI_OF(nap::PJLinkGetErrorStatusCommand::EStatus).get_enumeration();
+		outString.clear();
+		for (const auto& variant : status_type.get_values())
+		{
+			// Variant should be a uint16!
+			bool converted;
+			nap::uint mask_index = variant.to_uint16(&converted);
+			if (!error.check(converted, "Unable to convert variant of type '%s' to int16",
+				RTTI_OF(nap::PJLinkGetErrorStatusCommand::EStatus).get_name().data()))
+				return false;
+
+			// Check if the bit is set, if so append it
+			if ((mask & mask_index) > 0)
+			{
+				if (!outString.empty())
+					outString += ", ";
+				outString += status_type.value_to_name(variant).data();
+			}
+		}
+		return true;
+	}
+
+
+	std::string nap::PJLinkGetErrorStatusCommand::errorsToString() const
+	{
+		std::string errorstr; utility::ErrorState converr;
+		if (!toString(getErrors(), errorstr, converr))
+			nap::Logger::error(converr.toString());
+		return errorstr;
+	}
+
+
+	std::string nap::PJLinkGetErrorStatusCommand::warningsToString() const
+	{
+		std::string warningstr; utility::ErrorState converr;
+		if (!toString(getWarnings(), warningstr, converr))
+			nap::Logger::error(converr.toString());
+		return warningstr;
 	}
 }

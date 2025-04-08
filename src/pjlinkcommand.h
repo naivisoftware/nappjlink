@@ -103,6 +103,9 @@ namespace nap
 		// Creates an invalid pjlink command
 		PJLinkCommand() = default;
 
+		// Default destructor
+		virtual ~PJLinkCommand() = default;
+
 		/**
 		 * @return cmd characters
 		 */
@@ -307,7 +310,59 @@ namespace nap
 	{
 		RTTI_ENABLE(PJLinkGetCommand)
 	public:
+		enum class EStatus : nap::uint16
+		{
+			None			= 0x000,		//< No issue detected
+			Fan				= 0x001,		//< Fan issue
+			Lamp			= 0x002,		//< Lamp issue
+			Temerature		= 0x004,		//< Temperature issue
+			Cover			= 0x008,		//< Cover issue
+			Filter			= 0x010,		//< Filter issue
+			Other			= 0x020,		//< Other issue
+			TimeError		= 0x040,		//< Projector is unavailable
+			ProjectorError	= 0x080,		//< Projector error
+			Unknown			= 0x100			//< Response not available
+		};
+
 		PJLinkGetErrorStatusCommand() :
 			PJLinkGetCommand(pjlink::cmd::get::error)		{ }
+
+		/**
+		 * Returns warning bits, 0 if no response is available 
+		 * @return warning bits
+		 */
+		nap::uint16 getWarnings() const;
+
+		/**
+		 * @return all errors as ', ' separated string
+		 */
+		std::string warningsToString() const;
+
+		/**
+		 * Returns error bits, 0 if no response is available 
+		 * @return error bits
+		 */
+		nap::uint16 getErrors() const;
+
+		/**
+		 * @return all errors as ', ' separated string
+		 */
+		std::string errorsToString() const;
+
+		/**
+		 * Turns error or warning bit-mask into ', ' separated string  
+		 * @return if conversion succeeded
+		 */
+		static bool toString(nap::uint16 mask, std::string& outString, utility::ErrorState& error);
+
+		/**
+		 * @return if warning is present for given bit
+		 */
+		bool getWarning(EStatus status) const				{ return (getWarnings() & static_cast<nap::uint>(status)) > 0; }
+
+		/**
+		 * @return if error is present for given bit
+		 */
+		bool getError(EStatus status) const					{ return (getErrors() & static_cast<nap::uint>(status)) > 0; }
 	};
 }
