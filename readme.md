@@ -62,7 +62,7 @@ Listen to the `nap::PJLinkComponent::messageReceived` signal to receive response
 ...
 
 auto& comp = mProjectorEntity->getComponent<PJLinkComponentInstance>();
-comp.messageReceived.connect([](const PJLinkCommand& msg)
+comp.messageReceived.connect([](const PJLinkComponentInstance& instance, const PJLinkCommand& msg)
 	{
 		nap::Logger::info(msg.mResponse);
 	});

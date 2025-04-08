@@ -315,7 +315,7 @@ namespace nap
 			None			= 0x000,		//< No issue detected
 			Fan				= 0x001,		//< Fan issue
 			Lamp			= 0x002,		//< Lamp issue
-			Temerature		= 0x004,		//< Temperature issue
+			Temperature		= 0x004,		//< Temperature issue
 			Cover			= 0x008,		//< Cover issue
 			Filter			= 0x010,		//< Filter issue
 			Other			= 0x020,		//< Other issue
@@ -328,8 +328,8 @@ namespace nap
 			PJLinkGetCommand(pjlink::cmd::get::error)		{ }
 
 		/**
-		 * Returns warning bits, 0 if no response is available 
-		 * @return warning bits
+		 * Return warning bitmask
+		 * @return warning bitmask
 		 */
 		nap::uint16 getWarnings() const;
 
@@ -339,8 +339,8 @@ namespace nap
 		std::string warningsToString() const;
 
 		/**
-		 * Returns error bits, 0 if no response is available 
-		 * @return error bits
+		 * Return error bitmask
+		 * @return error bitmask
 		 */
 		nap::uint16 getErrors() const;
 
@@ -350,7 +350,10 @@ namespace nap
 		std::string errorsToString() const;
 
 		/**
-		 * Turns error or warning bit-mask into ', ' separated string  
+		 * Turns error or warning bitmask into ', ' separated string
+		 * @param mask the warning or error bitmask
+		 * @param outString formatted string
+		 * @param error the error if conversion fails
 		 * @return if conversion succeeded
 		 */
 		static bool toString(nap::uint16 mask, std::string& outString, utility::ErrorState& error);

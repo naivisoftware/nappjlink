@@ -79,7 +79,7 @@ RTTI_BEGIN_ENUM(nap::PJLinkGetErrorStatusCommand::EStatus)
 	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::None,			"None"),
 	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Fan,				"Fan"),
 	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Lamp	,			"Lamp"),
-	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Temerature,		"Temperature"),
+	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Temperature,		"Temperature"),
 	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Cover,			"Cover"),
 	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Filter,			"Filter"),
 	RTTI_ENUM_VALUE(nap::PJLinkGetErrorStatusCommand::EStatus::Other,			"Other"),
