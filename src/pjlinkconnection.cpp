@@ -55,10 +55,10 @@ namespace nap
 						ec.value(),
 						handle->mAddress.to_string().c_str(),
 						handle->mEndpoint.port());
-					return false;
 
 					// Notify listeners explicitly here -> otherwise on close
 					handle->mProjector.connectionClosed();
+					return false;
 				}
 
 				// Connection success -> verify authentification
