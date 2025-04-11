@@ -233,7 +233,7 @@ namespace nap
 		RTTI_ENABLE(PJLinkCommand)
 	public:
 		PJLinkGetCommand(const std::string& body) :
-			PJLinkCommand(body, &pjlink::cmd::query)	{ }
+			PJLinkCommand(body, std::string(1, pjlink::cmd::query))	{ }
 
 		// Invalid get command
 		PJLinkGetCommand() = default;
