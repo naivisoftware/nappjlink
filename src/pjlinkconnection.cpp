@@ -15,18 +15,17 @@
 #include <asio/use_future.hpp>
 #include <asio/defer.hpp>
 
-// Windows abort error code
-#ifdef WIN32 
-	constexpr int abortec = 1236;
-#else
-	constexpr int abortec = 0;
-#endif
-
-
 using namespace asio::ip;
 
 namespace nap
 {
+	// Windows abort error code
+#ifdef WIN32
+	constexpr int abortec = 1236;
+#else
+	constexpr int abortec = 125;
+#endif
+
 	PJLinkConnection::PJLinkConnection(pjlink::Context& context, const asio::ip::address& address, PJLinkProjector& projector) :
 		mSocket(context),
 		mProjector(projector),
