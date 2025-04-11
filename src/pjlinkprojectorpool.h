@@ -11,6 +11,7 @@
 #include <asio/io_context.hpp>
 #include <asio/executor_work_guard.hpp>
 #include <asio/ip/tcp.hpp>
+#include <thread>
 
 namespace nap
 {

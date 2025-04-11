@@ -19,7 +19,7 @@
 #ifdef WIN32 
 	constexpr int abortec = 1236;
 #else
-	constexpr int ec = 0;
+	constexpr int abortec = 0;
 #endif
 
 
